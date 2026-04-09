@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
+import Comments from "../components/Comments.astro";
 import dayjs from "dayjs";
 import type { CollectionEntry, MarkdownHeading } from "astro:content";
 
@@ -42,6 +43,7 @@ const tocHeadings = headings.filter((h) => h.depth <= 3);
       <div class="prose-custom">
         <slot />
       </div>
+      <Comments />
     </article>
 
     {

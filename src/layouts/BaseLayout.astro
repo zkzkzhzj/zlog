@@ -31,6 +31,20 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       )
     }
 
+    <!-- Search Console -->
+    <meta name="google-site-verification" content="QL5oG6ROeQ_efrAdk4Xk9ZLbSRYdxWNyzD2FT7BFrmU" />
+
+    <meta name="naver-site-verification" content="d38c673504a43b7081a895abd046ec7cfaba76c4" />
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HJR3WF26N4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-HJR3WF26N4');
+    </script>
+
     <!-- Sitemap -->
     <link rel="sitemap" href={`${base}sitemap-index.xml`} />
 
