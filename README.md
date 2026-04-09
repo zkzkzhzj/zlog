@@ -41,7 +41,7 @@ https://zlog.page
 - Naver Search Advisor — `zlog.page` 등록, sitemap + RSS 제출 (`/rss.xml`)
 
 ### 분석
-- Google Analytics — 측정 ID: `G-HJR3WF26N4`
+- Google Analytics
 
 ### 댓글
 - giscus — GitHub Discussions 기반, `General` 카테고리 사용
