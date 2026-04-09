@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Blog post prose */
+.prose-custom {
+  line-height: 1.8;
+  font-size: 15px;
+  color: #374151;
+}
+
+.prose-custom h1,
+.prose-custom h2,
+.prose-custom h3 {
+  color: #111827;
+  font-weight: 600;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+}
+
+.prose-custom h1 {
+  font-size: 1.5em;
+}
+.prose-custom h2 {
+  font-size: 1.25em;
+}
+.prose-custom h3 {
+  font-size: 1.1em;
+}
+
+.prose-custom p {
+  margin-bottom: 1.25em;
+}
+
+.prose-custom a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-custom a:hover {
+  color: #1d4ed8;
+}
+
+.prose-custom code {
+  background: #f3f4f6;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+}
+
+.prose-custom pre {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 1em 1.25em;
+  overflow-x: auto;
+  margin-bottom: 1.5em;
+}
+
+.prose-custom pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  color: #e5e5e5;
+}
+
+.prose-custom ul {
+  padding-left: 1.5em;
+  margin-bottom: 1.25em;
+  list-style-type: disc;
+}
+
+.prose-custom ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.25em;
+  list-style-type: decimal;
+}
+
+.prose-custom li {
+  margin-bottom: 0.25em;
+}
+
+.prose-custom blockquote {
+  border-left: 3px solid #d1d5db;
+  padding-left: 1em;
+  color: #6b7280;
+  margin-bottom: 1.25em;
+}
+
+.prose-custom table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5em;
+  font-size: 0.875em;
+}
+
+.prose-custom th,
+.prose-custom td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em 0.75em;
+}
+
+.prose-custom th {
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 600;
+}
+
+.prose-custom hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 2em 0;
+}
+
+.separator {
+  text-align: center;
+  margin: 2em 0;
+  color: #9ca3af;
+  font-size: 1.25em;
+  letter-spacing: 0.5em;
+}
+
+.prose-custom img {
+  border-radius: 8px;
+  margin: 1.5em auto;
+  display: block;
+}

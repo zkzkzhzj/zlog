@@ -1,0 +1,87 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import dayjs from "dayjs";
+import type { CollectionEntry, MarkdownHeading } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+  readingTime: string;
+  headings: MarkdownHeading[];
+}
+
+const { post, readingTime, headings } = Astro.props;
+const { title, description, pubDate, tags } = post.data;
+const tocHeadings = headings.filter((h) => h.depth <= 3);
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="relative">
+    <article>
+      <header class="mb-10">
+        <h1 class="mb-1 text-2xl font-semibold">{title}</h1>
+        {description && <p class="mb-3 text-sm text-gray-400">{description}</p>}
+        <div class="flex gap-3 text-xs text-gray-400">
+          <time datetime={pubDate.toISOString()}>
+            {dayjs(pubDate).format("YYYY. MM. DD")}
+          </time>
+          <span>&middot;</span>
+          <span>{readingTime}</span>
+        </div>
+        {
+          tags && tags.length > 0 && (
+            <div class="mt-3 flex flex-wrap gap-2">
+              {tags.map((tag: string) => (
+                <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )
+        }
+      </header>
+      <div class="prose-custom">
+        <slot />
+      </div>
+    </article>
+
+    {
+      tocHeadings.length > 0 && (
+        <aside class="toc-aside">
+          <nav class="sticky top-8">
+            <p class="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+              목차
+            </p>
+            <ul class="space-y-1.5 text-[13px]">
+              {tocHeadings.map((h) => (
+                <li style={`padding-left: ${(h.depth - 2) * 12}px`}>
+                  <a
+                    href={`#${h.slug}`}
+                    class="block text-gray-400 transition hover:text-gray-900"
+                  >
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </aside>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .toc-aside {
+    display: none;
+  }
+
+  @media (min-width: 1280px) {
+    .toc-aside {
+      display: block;
+      position: fixed;
+      top: 5rem;
+      left: calc(50% + 24rem + 2rem);
+      width: 14rem;
+    }
+  }
+</style>
