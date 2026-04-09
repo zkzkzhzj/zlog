@@ -14,8 +14,7 @@ import {
 } from "@shikijs/transformers";
 
 export default defineConfig({
-  site: "https://zkzkzhzj.github.io",
-  base: "/zlog",
+  site: "https://zlog.page",
   integrations: [mdx(), react(), sitemap()],
   devToolbar: { enabled: false },
   vite: {
