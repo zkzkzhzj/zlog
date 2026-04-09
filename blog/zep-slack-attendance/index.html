@@ -1,0 +1,456 @@
+<!DOCTYPE html><html lang="ko"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v6.1.5"><title>ZEP과 Slack을 이용한 출석체크(feat. Firebase)</title><meta name="description" content="우리 스터디의 출석부!"><link rel="canonical" href="https://zkzkzhzj.github.io/zlog/blog/zep-slack-attendance/"><!-- OG --><meta property="og:type" content="website"><meta property="og:url" content="https://zkzkzhzj.github.io/zlog/blog/zep-slack-attendance/"><meta property="og:title" content="ZEP과 Slack을 이용한 출석체크(feat. Firebase)"><meta property="og:description" content="우리 스터디의 출석부!"><!-- Sitemap --><link rel="sitemap" href="/zlogsitemap-index.xml"><!-- RSS --><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/zlogrss.xml"><link rel="stylesheet" href="/zlog/_astro/BaseLayout.C7UBDU8C.css">
+<style>.toc-aside[data-astro-cid-2q5oecfc]{display:none}@media(min-width:1280px){.toc-aside[data-astro-cid-2q5oecfc]{display:block;position:fixed;top:5rem;left:calc(50% + 26rem);width:14rem}}
+</style></head> <body class="flex min-h-screen flex-col bg-white text-gray-900"> <header class="border-b border-gray-100"> <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5"> <a href="/zloginfo/" class="text-lg font-semibold tracking-tight">zlog</a> <div class="flex gap-6 text-sm text-gray-500"> <a href="/zlogblog/" class="transition hover:text-gray-900">Blog</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div class="relative" data-astro-cid-2q5oecfc> <article data-astro-cid-2q5oecfc> <header class="mb-10" data-astro-cid-2q5oecfc> <h1 class="mb-1 text-2xl font-semibold" data-astro-cid-2q5oecfc>ZEP과 Slack을 이용한 출석체크(feat. Firebase)</h1> <p class="mb-3 text-sm text-gray-400" data-astro-cid-2q5oecfc>우리 스터디의 출석부!</p> <div class="flex gap-3 text-xs text-gray-400" data-astro-cid-2q5oecfc> <time datetime="2026-03-02T00:00:00.000Z" data-astro-cid-2q5oecfc> 2026. 03. 02 </time> <span data-astro-cid-2q5oecfc>&middot;</span> <span data-astro-cid-2q5oecfc>20 min read</span> </div> <div class="mt-3 flex flex-wrap gap-2" data-astro-cid-2q5oecfc> <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> Firebase </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> Slack </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> ZEP </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 자동화 </span> </div> </header> <div class="prose-custom" data-astro-cid-2q5oecfc>  <h2 id="이것을-하고싶은-분들은-게시글을-봐주세요">이것을 하고싶은 분들은 게시글을 봐주세요!</h2>
+<p><img src="/zlog/images/zep-slack/01.png" alt="Firestore 데이터 저장"/></p>
+<p><img src="/zlog/images/zep-slack/02.png" alt="Slack 로그"/></p>
+<ul>
+<li>핵심만 보고싶으시다면 Firebase 부분, 코드 부분만 빠르게 보고 스터디에 적용해봐요!</li>
+</ul>
+<h2 id="고민의-시작">고민의 시작</h2>
+<p><strong>데이터 흐름:</strong></p>
+<p>프로젝트 형식의 과외에서 ZEP과 Slack을 사용하고 있었어요</p>
+<p>저는 의지가 약한 편이라 멘토님들에게 여쭤봤어요<br/>
+‘혹시 ZEP을 운용하시는데 매일 출석하는 느낌으로 접속해도 괜찮을까요?’</p>
+<p>멘토님들은 흔쾌히 좋다고 하시면서 ZEP을 이용하여 어떻게 학습 의지를 북돋을수 있을까 고민하고 있으시다고 해주시더라구요</p>
+<p>저는 그날로부터 과외가 시작되기 전까지 고민을 하기 시작했어요</p>
+<p>그러다가 발견했어요</p>
+<p>Webhook이라는 것을..!</p>
+<h2 id="webhook은-최고야">Webhook은 최고야!</h2>
+<p>Webhook은 서버에서 <strong>특정 이벤트가 발생했을 때 미리 등록된 URL로 HTTP POST 요청을 보내서 실시간 전달하는 자동화된 기술</strong>이에요</p>
+<p>그때 하나의 흐름이 제 머리속을 스쳐가더라구요</p>
+<p><img src="/zlog/images/zep-slack/03.png" alt="시스템 흐름"/></p>
+<p>이거 잘만하면 빠르게 만들 수 있겠다!</p>
+<p>마침 ZEP과 Slack 모두 Webhook 앱을 지원하고 있는 상태기도 했고요!</p>
+<p><img src="/zlog/images/zep-slack/04.png" alt="ZEP 연동 위치"/></p>
+<p><img src="/zlog/images/zep-slack/05.png" alt="Slack 웹 후크"/></p>
+<p>ZEP 이미지에서 ‘외부 알림 연결’에 수신받을 URL을 입력해주면 끝이에요</p>
+<p>그러면 수신받을 URL은 Slack 어디에서 얻냐?</p>
+<p>바로 Slack 수신웹후크 앱 설정에 들어가면 수신받을 Slack URL 주소, 수신받을 채널 선택 등 설정을 해줄 수 있어요</p>
+<p><img src="/zlog/images/zep-slack/06.png" alt="Slack 웹 후크 설정"/></p>
+<p>저기 나오는 URL을 복사해서 ZEP Webhook에 연결해주면!</p>
+<p>아래 이미지 같이 정상적으로 입/퇴장 메시지를 받아볼 수 있어요</p>
+<p><img src="/zlog/images/zep-slack/07.png" alt="ZEP 웹 후크 등록"/></p>
+<p><img src="/zlog/images/zep-slack/08.png" alt="Slack 테스트 로그"/></p>
+<p><strong>참고로 나중에 나올 Firebase Function URL은 API로 등록하셔야해요</strong></p>
+<h2 id="냉혹한-현실">냉혹한 현실</h2>
+<p>하지만 세상 모든일이 그렇듯 제 생각대로만 흘러가지는 않았어요..</p>
+<p>Webhook으로는 한계가 명확했어요</p>
+<p>일단 메시지 커스텀이 안되고요<br/>
+궁극적으로 입/퇴장 정보를 사용해서 일일/주간 접속 통계를 하는 등 데이터를 활용하는 것까지 생각하고 있었기에 더욱 한계가 명확하게 느껴졌어요</p>
+<p>그때 ‘어차피 HTTP Post로 데이터를 전달해주는거면 중간 서버에서 캐치하면되지 않을까?’라는 생각이 머리를 스쳤어요</p>
+<p><img src="/zlog/images/zep-slack/09.png" alt="시스템 흐름"/></p>
+<h2 id="서버-운용의-부담-어떻게-해야할까">서버 운용의 부담.. 어떻게 해야할까?</h2>
+<p>하지만 이제 막 과외를 시작하는 입장에서 서버운용은 해본적 없고.. 배보다 배꼽이 커지는 느낌이였어요</p>
+<p>그때 마침 제 머리속을 스쳐나가는 예전 기억</p>
+<p>안드로이드 개발할 때 서버리스 앱을 개발하기 위해서 자주 사용했던 Firebase</p>
+<p>마침 찾아보니 <strong>Firebase Functions</strong> 라는게 존재하더라고요!</p>
+<p><img src="/zlog/images/zep-slack/10.png" alt="Firebase Functions"/></p>
+<p>설명만 봐도 딱 제가 원하는 <strong>‘HTTPS 요청을 Cloud 서버에서 응답하여 백엔드 코드를 자동으로 실행할 수 있다’</strong> 라는 조건을 충족하네요</p>
+<p>그래서 찾아봤어요 비용은..? 괜찮을까?</p>
+<p><img src="/zlog/images/zep-slack/11.png" alt="Firebase Functions 금액"/></p>
+<p>다행히 <strong>월 200만 요청까지는 무료</strong>라고 하더라고요</p>
+<p>이정도면 스터디용도로는 충분히 차고넘친다고 판단했어요</p>
+<p>다만, 사용하려면 결제 카드 등록은 꼭 필요하니 카드를 미리 준비해두세요!</p>
+<h2 id="firebase-functions">Firebase Functions</h2>
+<p>먼저 Firebase를 사용해본적이 없으신 분들은 <strong>Google Firebase에 계정을 생성</strong>해주셔야해요</p>
+<p>아! 물론 Firebase를 꼭 사용할 필요는 없어요<br/>
+자신에게 맞는 서버가 있다면 그걸 써서 데이터를 받아 커스텀하시면 돼요!</p>
+<p>로그인하고 console로 들어가시면 아래와 같은 화면이 반겨줄거에요</p>
+<p><img src="/zlog/images/zep-slack/12.png" alt="Firebase"/></p>
+<p>새로운 Firebase 프로젝트를 생성하시면 돼요!</p>
+<p>그러면 메인화면이 반겨줄 텐데 딱 여기만 보시면 돼요!</p>
+<p><img src="/zlog/images/zep-slack/13.png" alt="Firebase 메뉴"/></p>
+<p>먼저 제일 하단에 요금제를 업그레이드 해줄 수 있는데 여기서 <strong>카드 등록이랑 업그레이드</strong>를 해주시면 돼요</p>
+<p>업그레이드한다고 요금 결제가 되는 것도 아니고 당장에 돈이 빠져나가는 건 아니니까 안심하셔도 돼요!</p>
+<p>아! 그리고 처음을 떠올려보면 데이터를 저장한다고 했잖아요</p>
+<p><strong>Firestore Database는 NoSQL 데이터베이스</strong>에요</p>
+<p>그러니까 SQL 데이터베이스처럼 테이블 정의, 컬럼 정의를 할 필요가 없어요</p>
+<p>문서 형식의 데이터베이스이기 때문에 아무것도 설정할게 없으니 지금은 신경안쓰셔도 돼요!</p>
+<p>그 다음 Functions 메뉴를 들어가면 아래와 같은 화면이 반겨줄거에요</p>
+<p><img src="/zlog/images/zep-slack/15.png" alt="Firebase Functions"/></p>
+<p>여기서 ‘안내’를 클릭하면 우리의 로컬에 <strong>Firebase 패키지 설치 명령어와 배포 명령어</strong>를 알려줄거에요</p>
+<p>참! Firebase 패키지 설치할 때 뭘 설치할건지 선택해야하는데 여기서는<br/>
+Functions 랑 Database 2개만 설치하셔도 돼요!</p>
+<p>설치를 하면 로컬에 아래와 같이 Firebase Functions 프로젝트가 보일거에요</p>
+<p><img src="/zlog/images/zep-slack/14.png" alt="프로젝트 패키지"/></p>
+<h2 id="드디어-코드-구현">드디어 코드 구현..</h2>
+<p>우리가 신경써야할 파일은 단 2개에요</p>
+<ul>
+<li>index.ts</li>
+<li>secret.txt (패키지 포함이 아닌 생성한 파일)</li>
+</ul>
+<p>먼저 index.ts 부터 설명을 할게요(전체 소스는 최하단에 첨부할게요!)</p>
+<p><strong>1. ZEP의 이벤트 감지 설정</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> {setGlobalOptions} </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> {onRequest} </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions/https&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#79B8FF"> *</span><span style="color:#F97583"> as</span><span style="color:#E1E4E8"> logger </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions/logger&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> {defineSecret} </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions/params&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#79B8FF"> *</span><span style="color:#F97583"> as</span><span style="color:#E1E4E8"> admin </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-admin&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// 동시 실행 인스턴스를 10개로 제한(비용 보호)</span></span>
+<span class="line"><span style="color:#B392F0">setGlobalOptions</span><span style="color:#E1E4E8">({maxInstances: </span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">...</span><span style="color:#E1E4E8">.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP 이벤트 감지 함수</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> const</span><span style="color:#79B8FF"> zep</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> onRequest</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">  {secrets: [</span><span style="color:#79B8FF">SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">]},</span></span>
+<span class="line"><span style="color:#F97583">  async</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">req</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">res</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">=&gt;</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6A737D">      // req.body -&gt; ZEP Event body</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> payload</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> pickPayload</span><span style="color:#E1E4E8">(req.body);</span></span>
+<span class="line"><span style="color:#E1E4E8">      logger.</span><span style="color:#B392F0">info</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;ZEP data&quot;</span><span style="color:#E1E4E8">, {payload});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">      // DB 저장 함수</span></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#B392F0"> saveToDb</span><span style="color:#E1E4E8">(payload);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">      // secret.txt Slack URL</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> webhook</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">.</span><span style="color:#B392F0">value</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#6A737D">      // slack 전송 커스텀 메시지 생성</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> text</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> madeComment</span><span style="color:#E1E4E8">(payload);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">      // slack 전송</span></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#B392F0"> postToSlack</span><span style="color:#E1E4E8">(webhook, text);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">      res.</span><span style="color:#B392F0">status</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">200</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">type</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;text/plain&quot;</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">send</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;success&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">    } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">e</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#E1E4E8">      logger.</span><span style="color:#B392F0">error</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;zep error&quot;</span><span style="color:#E1E4E8">, {message: e?.message, stack: e?.stack});</span></span>
+<span class="line"><span style="color:#E1E4E8">      res.</span><span style="color:#B392F0">status</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">500</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">type</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;text/plain&quot;</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">send</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;error&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span></code></pre>
+<p>우리는 ZEP의 Event를 <strong>onRequest</strong> 함수를 통해 받아줄거에요</p>
+<p>소스를 뜯어보기 전에 먼저 <strong>secret.txt</strong>부터 설명하고 넘어갈게요</p>
+<p>우리가 위에서 받은 Slack 수신 웹후크 URL은 외부에 유출되면 안되는 중요한 정보에요</p>
+<p>이걸 Firebase Functions에서 어떻게 비밀스럽게 관리할 수 있을까 찾아보니 <strong>functions secrets</strong>라는 것을 제공해준다고 하더라고요</p>
+<p>먼저, 프로젝트 root 경로에 secret.txt를 만들어주고 그 텍스트 내부에는 Slack URL만 입력하고 저장해주세요<br/>
+<strong>꼭! gitignore에 secret.txt를 넣어주세요!</strong></p>
+<p>그리고 터미널에 와서 아래 명령어를 입력해주세요</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#79B8FF">type</span><span style="color:#9ECBFF"> secret.txt</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> npx</span><span style="color:#9ECBFF"> firebase</span><span style="color:#9ECBFF"> functions:secrets:set</span><span style="color:#9ECBFF"> SLACK_WEBHOOK_URL</span></span></code></pre>
+<p>이걸 우리의 index.ts 소스에서 불러오려면 이렇게 쓰면 돼요</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// slack url secret 보관</span></span>
+<span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> SLACK_WEBHOOK_URL</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> defineSecret</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;SLACK_WEBHOOK_URL&quot;</span><span style="color:#E1E4E8">);</span></span></code></pre>
+<p>자.. 그럼 다음단계로 넘어가볼까요?</p>
+<p><strong>2. 메시지 커스텀</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP payload type definition</span></span>
+<span class="line"><span style="color:#6A737D"> * - date: 이벤트 발생 시간</span></span>
+<span class="line"><span style="color:#6A737D"> * - mapName: 맵 이름</span></span>
+<span class="line"><span style="color:#6A737D"> * - map_hashID : 맵 고유 ID</span></span>
+<span class="line"><span style="color:#6A737D"> * - type : 이벤트 타입</span></span>
+<span class="line"><span style="color:#6A737D"> * - nickname : 유저 닉네임</span></span>
+<span class="line"><span style="color:#6A737D"> * - userId : 유저 Id</span></span>
+<span class="line"><span style="color:#6A737D"> * - userKey : 유저 고유 키</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">type</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#FFAB70">  date</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  mapName</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  map_hashID</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  nickname</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  type</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">; </span><span style="color:#6A737D">// enter | exit | test ...</span></span>
+<span class="line"><span style="color:#FFAB70">  userId</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  userKey</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP payload parser</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP에서 보내는 데이터의 경우 body.body.* 형태로 발송되어 파싱 필요</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {any}</span><span style="color:#E1E4E8"> body</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@return</span><span style="color:#B392F0"> {ZepPayload}</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">function</span><span style="color:#B392F0"> pickPayload</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">body</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">)</span><span style="color:#F97583">:</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">  return</span><span style="color:#E1E4E8"> (body?.body </span><span style="color:#F97583">??</span><span style="color:#E1E4E8"> body) </span><span style="color:#F97583">as</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP made comment builder</span></span>
+<span class="line"><span style="color:#6A737D"> * type 이벤트에 따라 메시지를 구분지어 생성</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {ZepPayload}</span><span style="color:#E1E4E8"> payload</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@return</span><span style="color:#B392F0"> {string}</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">function</span><span style="color:#B392F0"> madeComment</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">payload</span><span style="color:#F97583">:</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8">)</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> type</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.type </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> nickname</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.nickname </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> date</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.date </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> userId</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.userId </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (type </span><span style="color:#F97583">===</span><span style="color:#9ECBFF"> &quot;enter&quot;</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#9ECBFF"> `${</span><span style="color:#E1E4E8">nickname</span><span style="color:#9ECBFF">}[${</span><span style="color:#E1E4E8">userId</span><span style="color:#9ECBFF">}] 입장</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- 시간: ${</span><span style="color:#E1E4E8">date</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (type </span><span style="color:#F97583">===</span><span style="color:#9ECBFF"> &quot;exit&quot;</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#9ECBFF"> `${</span><span style="color:#E1E4E8">nickname</span><span style="color:#9ECBFF">}[${</span><span style="color:#E1E4E8">userId</span><span style="color:#9ECBFF">}] 퇴장</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- 시간: ${</span><span style="color:#E1E4E8">date</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#F97583">  return</span><span style="color:#9ECBFF"> `${</span><span style="color:#E1E4E8">type</span><span style="color:#9ECBFF">} 이벤트 </span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- ${</span><span style="color:#E1E4E8">nickname</span><span style="color:#9ECBFF">}[${</span><span style="color:#E1E4E8">userId</span><span style="color:#9ECBFF">}]</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- 시간: ${</span><span style="color:#E1E4E8">date</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP 이벤트 감지 함수</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> const</span><span style="color:#79B8FF"> zep</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> onRequest</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">  {secrets: [</span><span style="color:#79B8FF">SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">]},</span></span>
+<span class="line"><span style="color:#F97583">  async</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">req</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">res</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">=&gt;</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> payload</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> pickPayload</span><span style="color:#E1E4E8">(req.body);</span></span>
+<span class="line"><span style="color:#F97583">      ...</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> text</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> madeComment</span><span style="color:#E1E4E8">(payload);</span></span>
+<span class="line"><span style="color:#F97583">   ...</span></span>
+<span class="line"><span style="color:#E1E4E8">    } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">e</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">     ...</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span></code></pre>
+<p>ZEP에서 넘겨받은 body 데이터를 파싱해서 커스텀 메시지를 만들어줘요</p>
+<p>ZepPayload를 사용한 이유는 ZEP에서 보내주는 데이터가 body.body.*로 감싸져서 오기 때문에 파싱을 위해 사용했어요</p>
+<p>메시지를 수정하고 싶으신 분들은 <strong>madeComment</strong> 여기에서 입맛에 맞게 수정해주시면 돼요!</p>
+<p><strong>3. Slack으로 전달</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * post to slack</span></span>
+<span class="line"><span style="color:#6A737D"> * 생성된 메시지를 슬렉으로 전송</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {string}</span><span style="color:#E1E4E8"> webhook</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {string}</span><span style="color:#E1E4E8"> text</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> function</span><span style="color:#B392F0"> postToSlack</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">webhook</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">text</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> resp</span><span style="color:#F97583"> =</span><span style="color:#F97583"> await</span><span style="color:#B392F0"> fetch</span><span style="color:#E1E4E8">(webhook, {</span></span>
+<span class="line"><span style="color:#E1E4E8">    method: </span><span style="color:#9ECBFF">&quot;POST&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    headers: {</span><span style="color:#9ECBFF">&quot;content-type&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;application/json; charset=utf-8&quot;</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    body: </span><span style="color:#79B8FF">JSON</span><span style="color:#E1E4E8">.</span><span style="color:#B392F0">stringify</span><span style="color:#E1E4E8">({text}),</span></span>
+<span class="line"><span style="color:#E1E4E8">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  // 발송 실패의 경우 로그로 남기기 위해 throw 발생</span></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">!</span><span style="color:#E1E4E8">resp.ok) {</span></span>
+<span class="line"><span style="color:#F97583">    const</span><span style="color:#79B8FF"> body</span><span style="color:#F97583"> =</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> resp.</span><span style="color:#B392F0">text</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">    throw</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> Error</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">`Slack webhook failed: ${</span><span style="color:#E1E4E8">resp</span><span style="color:#9ECBFF">.</span><span style="color:#E1E4E8">status</span><span style="color:#9ECBFF">} ${</span><span style="color:#E1E4E8">body</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP 이벤트 감지 함수</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> const</span><span style="color:#79B8FF"> zep</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> onRequest</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">  {secrets: [</span><span style="color:#79B8FF">SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">]},</span></span>
+<span class="line"><span style="color:#F97583">  async</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">req</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">res</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">=&gt;</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> payload</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> pickPayload</span><span style="color:#E1E4E8">(req.body);</span></span>
+<span class="line"><span style="color:#F97583">     ...</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> webhook</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">.</span><span style="color:#B392F0">value</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> text</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> madeComment</span><span style="color:#E1E4E8">(payload);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#B392F0"> postToSlack</span><span style="color:#E1E4E8">(webhook, text);</span></span>
+<span class="line"><span style="color:#F97583">      ...</span></span>
+<span class="line"><span style="color:#E1E4E8">    } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">e</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">     ...</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span></code></pre>
+<p>Slack을 향해서 Post 전달을 하면!! 아래와 같이 Slack에서 잘 받아지는 것을 확인할 수 있어요</p>
+<p>여기서 꼭 <strong>Firebase Functions 배포</strong>를 해주세요!(하단 배포 메뉴 참고)</p>
+<p><img src="/zlog/images/zep-slack/02.png" alt="Slack 로그"/></p>
+<p><strong>4. Firestore Database</strong></p>
+<p>아직 한 단계가 더 남아있어요</p>
+<p>우리는 ZEP에서 넘어온 데이터를 데이터베이스에 저장할거에요</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// firebase db 연결</span></span>
+<span class="line"><span style="color:#E1E4E8">admin.</span><span style="color:#B392F0">initializeApp</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> db</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> admin.</span><span style="color:#B392F0">firestore</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP 이벤트 데이터 Firestore 저장</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {ZepPayload}</span><span style="color:#E1E4E8">  payload</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> function</span><span style="color:#B392F0"> saveToDb</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">payload</span><span style="color:#F97583">:</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">  // events 컬렉션에 원본 저장(디버깅/추적용)</span></span>
+<span class="line"><span style="color:#F97583">  await</span><span style="color:#E1E4E8"> db.</span><span style="color:#B392F0">collection</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;events&quot;</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#E1E4E8">    receivedAtMs: Date.</span><span style="color:#B392F0">now</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    type: payload.type </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    userId: payload.userId </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    date: payload.date </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    map_hashID: payload.map_hashID </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    mapName: payload.mapName </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    nickname: payload.nickname </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    payload,</span></span>
+<span class="line"><span style="color:#E1E4E8">  });</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP 이벤트 감지 함수</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> const</span><span style="color:#79B8FF"> zep</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> onRequest</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">  {secrets: [</span><span style="color:#79B8FF">SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">]},</span></span>
+<span class="line"><span style="color:#F97583">  async</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">req</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">res</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">=&gt;</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> payload</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> pickPayload</span><span style="color:#E1E4E8">(req.body);</span></span>
+<span class="line"><span style="color:#F97583">   ...</span></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#B392F0"> saveToDb</span><span style="color:#E1E4E8">(payload);</span></span>
+<span class="line"><span style="color:#F97583">      ...</span></span>
+<span class="line"><span style="color:#E1E4E8">    } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">e</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">     ...</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span></code></pre>
+<p>saveToDb 메소드는 ZEP에서 넘겨받은 데이터를 그대로 저장해주고 있어요</p>
+<p>그리고 마지막으로 <strong>Firebase Functions 배포</strong>를 해주면 아래와 같이 잘 저장되는 것을 확인할 수 있어요 :)</p>
+<p><img src="/zlog/images/zep-slack/01.png" alt="Firestore 데이터 저장"/></p>
+<p><strong>Firebase Functions 배포</strong></p>
+<p>Firebase Functions 배포를 하기 위해서는 아래 명령어를 실행하면 돼요</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">npx</span><span style="color:#9ECBFF"> firebase</span><span style="color:#9ECBFF"> deploy</span></span></code></pre>
+<p>다만, 신경써야할 점이 있어요</p>
+<p>Firebase Functions 배포를 하면 Firebase 사이트에서 URL을 제공해주는데 그 URL은 ZEP에서 Webhook이 아닌 <strong>API에 등록</strong>을 해주셔야해요!</p>
+<h2 id="도움이-되었다는-기쁨">도움이 되었다는 기쁨</h2>
+<p>그리고 저는 여기까지 확인한 차에 과외가 시작되어 프로젝트는 멈추게 되었어요</p>
+<p>여기서 조금더 가다듬으면 일일/주간 통계라던지 스스로의 학습 시간들을 직접 눈으로 확인하고 하루하루 성장하는 동력에 큰 힘이 될 수 있을 것 같았는데..</p>
+<p>너무 아쉬웠어요</p>
+<p>그래서 멘토님에게 이렇게 ZEP과 Slack을 활용하면 어떨까 의견을 드렸어요</p>
+<p>정말 감사하게도 멘토이신 그릿님께서 너무 좋은 아이디어라고 해주시면서 저의 흐름 베이스에서 직접 만들어주시겠다고 하셨어요</p>
+<p>저는 제가 생각한 작은 아이디어가 다른 분들에게 도움이 될거라고 하니 너무 기뻤어요</p>
+<p>그리고 그릿님께서는 정말 빠르게 프로토타입 배포를 시작하셨어요</p>
+<p><img src="/zlog/images/zep-slack/16.png" alt="출석 시스템 도입 안내"/></p>
+<p><img src="/zlog/images/zep-slack/17.png" alt="출석 시스템 로그"/></p>
+<p><img src="/zlog/images/zep-slack/18.png" alt="출석 시스템 웹 페이지"/></p>
+<p>제가 고민하고 해결하고자 했던 문제가 실제로 눈앞에서 해결되는 것을 보니 너무나 즐거웠어요.</p>
+<p>그래서 더 많은 분들이 이 글을 통해 동기부여를 얻고, 직접 만든 도구로 성장의 동력을 느끼실 수 있기를 바라며 작성하게 되었어요</p>
+<p>지금 저의 소스로는 아직 부족한 부분이 많지만 여러분들이 원하는 출석 시스템을 한번 상상해보시고 구축해보시는 건 어떨까요?</p>
+<p>작은 아이디어 하나가 스터디 문화를 바꿀 수도 있어요, <strong>한번 도전해보세요!</strong></p>
+<p>매일 조금씩 앞으로 나아가는 자신을 믿어보아요!</p>
+<h2 id="전체-소스">전체 소스</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * npx firebase deploy --only functions</span></span>
+<span class="line"><span style="color:#6A737D"> * type secret.txt | npx firebase functions:secrets:set SLACK_WEBHOOK_URL</span></span>
+<span class="line"><span style="color:#6A737D"> *</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP - Firebase Functions - Slack 연동하여 이벤트 저장 및 메시지 발송</span></span>
+<span class="line"><span style="color:#6A737D"> * 1. ZEP에서 외부알림연결 -&gt; API 등록으로 firebase functions 배포하면 나오는 URL 등록</span></span>
+<span class="line"><span style="color:#6A737D"> * 2. 하단 소스에서 넘겨받은 데이터를 파싱하여 Slack 으로 메시지 발송(Slack incoming-webhook 활성화시 URL 발급)</span></span>
+<span class="line"><span style="color:#6A737D"> * 3. Slack 에서 incoming-webhook 을 이용하여 메시지 수신</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> {setGlobalOptions} </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> {onRequest} </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions/https&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#79B8FF"> *</span><span style="color:#F97583"> as</span><span style="color:#E1E4E8"> logger </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions/logger&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> {defineSecret} </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-functions/params&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#79B8FF"> *</span><span style="color:#F97583"> as</span><span style="color:#E1E4E8"> admin </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> &quot;firebase-admin&quot;</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// 동시 실행 인스턴스를 10개로 제한(비용 보호)</span></span>
+<span class="line"><span style="color:#B392F0">setGlobalOptions</span><span style="color:#E1E4E8">({maxInstances: </span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// firebase db 연결</span></span>
+<span class="line"><span style="color:#E1E4E8">admin.</span><span style="color:#B392F0">initializeApp</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> db</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> admin.</span><span style="color:#B392F0">firestore</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// slack url secret 보관</span></span>
+<span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> SLACK_WEBHOOK_URL</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> defineSecret</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;SLACK_WEBHOOK_URL&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP payload type definition</span></span>
+<span class="line"><span style="color:#6A737D"> * - date: 이벤트 발생 시간</span></span>
+<span class="line"><span style="color:#6A737D"> * - mapName: 맵 이름</span></span>
+<span class="line"><span style="color:#6A737D"> * - map_hashID : 맵 고유 ID</span></span>
+<span class="line"><span style="color:#6A737D"> * - type : 이벤트 타입</span></span>
+<span class="line"><span style="color:#6A737D"> * - nickname : 유저 닉네임</span></span>
+<span class="line"><span style="color:#6A737D"> * - userId : 유저 Id</span></span>
+<span class="line"><span style="color:#6A737D"> * - userKey : 유저 고유 키</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">type</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#FFAB70">  date</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  mapName</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  map_hashID</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  nickname</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  type</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">; </span><span style="color:#6A737D">// enter | exit | test ...</span></span>
+<span class="line"><span style="color:#FFAB70">  userId</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#FFAB70">  userKey</span><span style="color:#F97583">?:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP payload parser</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP에서 보내는 데이터의 경우 body.body.* 형태로 발송되어 파싱 필요</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {any}</span><span style="color:#E1E4E8"> body</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@return</span><span style="color:#B392F0"> {ZepPayload}</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">function</span><span style="color:#B392F0"> pickPayload</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">body</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">)</span><span style="color:#F97583">:</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">  return</span><span style="color:#E1E4E8"> (body?.body </span><span style="color:#F97583">??</span><span style="color:#E1E4E8"> body) </span><span style="color:#F97583">as</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP made comment builder</span></span>
+<span class="line"><span style="color:#6A737D"> * type 이벤트에 따라 메시지를 구분지어 생성</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {ZepPayload}</span><span style="color:#E1E4E8"> payload</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@return</span><span style="color:#B392F0"> {string}</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">function</span><span style="color:#B392F0"> madeComment</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">payload</span><span style="color:#F97583">:</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8">)</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> type</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.type </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> nickname</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.nickname </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> date</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.date </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> userId</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> String</span><span style="color:#E1E4E8">(payload.userId </span><span style="color:#F97583">??</span><span style="color:#9ECBFF"> &quot;&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (type </span><span style="color:#F97583">===</span><span style="color:#9ECBFF"> &quot;enter&quot;</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#9ECBFF"> `${</span><span style="color:#E1E4E8">nickname</span><span style="color:#9ECBFF">}[${</span><span style="color:#E1E4E8">userId</span><span style="color:#9ECBFF">}] 입장</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- 시간: ${</span><span style="color:#E1E4E8">date</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (type </span><span style="color:#F97583">===</span><span style="color:#9ECBFF"> &quot;exit&quot;</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#9ECBFF"> `${</span><span style="color:#E1E4E8">nickname</span><span style="color:#9ECBFF">}[${</span><span style="color:#E1E4E8">userId</span><span style="color:#9ECBFF">}] 퇴장</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- 시간: ${</span><span style="color:#E1E4E8">date</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#F97583">  return</span><span style="color:#9ECBFF"> `${</span><span style="color:#E1E4E8">type</span><span style="color:#9ECBFF">} 이벤트 </span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- ${</span><span style="color:#E1E4E8">nickname</span><span style="color:#9ECBFF">}[${</span><span style="color:#E1E4E8">userId</span><span style="color:#9ECBFF">}]</span><span style="color:#79B8FF">\n</span><span style="color:#9ECBFF">- 시간: ${</span><span style="color:#E1E4E8">date</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * post to slack</span></span>
+<span class="line"><span style="color:#6A737D"> * 생성된 메시지를 슬렉으로 전송</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {string}</span><span style="color:#E1E4E8"> webhook</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {string}</span><span style="color:#E1E4E8"> text</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> function</span><span style="color:#B392F0"> postToSlack</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">webhook</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">text</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> string</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> resp</span><span style="color:#F97583"> =</span><span style="color:#F97583"> await</span><span style="color:#B392F0"> fetch</span><span style="color:#E1E4E8">(webhook, {</span></span>
+<span class="line"><span style="color:#E1E4E8">    method: </span><span style="color:#9ECBFF">&quot;POST&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    headers: {</span><span style="color:#9ECBFF">&quot;content-type&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;application/json; charset=utf-8&quot;</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    body: </span><span style="color:#79B8FF">JSON</span><span style="color:#E1E4E8">.</span><span style="color:#B392F0">stringify</span><span style="color:#E1E4E8">({text}),</span></span>
+<span class="line"><span style="color:#E1E4E8">  });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  // 발송 실패의 경우 로그로 남기기 위해 throw 발생</span></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">!</span><span style="color:#E1E4E8">resp.ok) {</span></span>
+<span class="line"><span style="color:#F97583">    const</span><span style="color:#79B8FF"> body</span><span style="color:#F97583"> =</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> resp.</span><span style="color:#B392F0">text</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">    throw</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> Error</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">`Slack webhook failed: ${</span><span style="color:#E1E4E8">resp</span><span style="color:#9ECBFF">.</span><span style="color:#E1E4E8">status</span><span style="color:#9ECBFF">} ${</span><span style="color:#E1E4E8">body</span><span style="color:#9ECBFF">}`</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP 이벤트 데이터 Firestore 저장</span></span>
+<span class="line"><span style="color:#6A737D"> * </span><span style="color:#F97583">@param</span><span style="color:#B392F0"> {ZepPayload}</span><span style="color:#E1E4E8">  payload</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> function</span><span style="color:#B392F0"> saveToDb</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">payload</span><span style="color:#F97583">:</span><span style="color:#B392F0"> ZepPayload</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">  // events 컬렉션에 원본 저장(디버깅/추적용)</span></span>
+<span class="line"><span style="color:#F97583">  await</span><span style="color:#E1E4E8"> db.</span><span style="color:#B392F0">collection</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;events&quot;</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#E1E4E8">    receivedAtMs: Date.</span><span style="color:#B392F0">now</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    type: payload.type </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    userId: payload.userId </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    date: payload.date </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    map_hashID: payload.map_hashID </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    mapName: payload.mapName </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    nickname: payload.nickname </span><span style="color:#F97583">??</span><span style="color:#79B8FF"> null</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    payload,</span></span>
+<span class="line"><span style="color:#E1E4E8">  });</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">/**</span></span>
+<span class="line"><span style="color:#6A737D"> * ZEP 이벤트 감지 함수</span></span>
+<span class="line"><span style="color:#6A737D"> */</span></span>
+<span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> const</span><span style="color:#79B8FF"> zep</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> onRequest</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">  {secrets: [</span><span style="color:#79B8FF">SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">]},</span></span>
+<span class="line"><span style="color:#F97583">  async</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">req</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">res</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">=&gt;</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> payload</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> pickPayload</span><span style="color:#E1E4E8">(req.body);</span></span>
+<span class="line"><span style="color:#E1E4E8">      logger.</span><span style="color:#B392F0">info</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;ZEP data&quot;</span><span style="color:#E1E4E8">, {payload});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#B392F0"> saveToDb</span><span style="color:#E1E4E8">(payload);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> webhook</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> SLACK_WEBHOOK_URL</span><span style="color:#E1E4E8">.</span><span style="color:#B392F0">value</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> text</span><span style="color:#F97583"> =</span><span style="color:#B392F0"> madeComment</span><span style="color:#E1E4E8">(payload);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#B392F0"> postToSlack</span><span style="color:#E1E4E8">(webhook, text);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">      res.</span><span style="color:#B392F0">status</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">200</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">type</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;text/plain&quot;</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">send</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;success&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">    } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> (</span><span style="color:#FFAB70">e</span><span style="color:#F97583">:</span><span style="color:#79B8FF"> any</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#E1E4E8">      logger.</span><span style="color:#B392F0">error</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;zep error&quot;</span><span style="color:#E1E4E8">, {message: e?.message, stack: e?.stack});</span></span>
+<span class="line"><span style="color:#E1E4E8">      res.</span><span style="color:#B392F0">status</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">500</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">type</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;text/plain&quot;</span><span style="color:#E1E4E8">).</span><span style="color:#B392F0">send</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&quot;error&quot;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span></code></pre>  </div> </article> <aside class="toc-aside" data-astro-cid-2q5oecfc> <nav class="sticky top-8" data-astro-cid-2q5oecfc> <p class="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase" data-astro-cid-2q5oecfc>
+목차
+</p> <ul class="space-y-1.5 text-[13px]" data-astro-cid-2q5oecfc> <li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#이것을-하고싶은-분들은-게시글을-봐주세요" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 이것을 하고싶은 분들은 게시글을 봐주세요! </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#고민의-시작" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 고민의 시작 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#webhook은-최고야" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> Webhook은 최고야! </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#냉혹한-현실" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 냉혹한 현실 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#서버-운용의-부담-어떻게-해야할까" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 서버 운용의 부담.. 어떻게 해야할까? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#firebase-functions" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> Firebase Functions </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#드디어-코드-구현" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 드디어 코드 구현.. </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#도움이-되었다는-기쁨" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 도움이 되었다는 기쁨 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#전체-소스" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 전체 소스 </a> </li> </ul> </nav> </aside> </div>  </main> <footer class="mt-auto border-t border-gray-100 py-6 text-center text-xs text-gray-400">
+&copy; 2026 zlog
+</footer></body></html>

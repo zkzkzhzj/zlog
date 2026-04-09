@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="ko"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v6.1.5"><title>아키텍처의 본질</title><meta name="description" content="내가 생각하는 아키텍처란.."><link rel="canonical" href="https://zkzkzhzj.github.io/zlog/blog/architecture-essence/"><!-- OG --><meta property="og:type" content="website"><meta property="og:url" content="https://zkzkzhzj.github.io/zlog/blog/architecture-essence/"><meta property="og:title" content="아키텍처의 본질"><meta property="og:description" content="내가 생각하는 아키텍처란.."><!-- Sitemap --><link rel="sitemap" href="/zlogsitemap-index.xml"><!-- RSS --><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/zlogrss.xml"><link rel="stylesheet" href="/zlog/_astro/BaseLayout.C7UBDU8C.css">
+<style>.toc-aside[data-astro-cid-2q5oecfc]{display:none}@media(min-width:1280px){.toc-aside[data-astro-cid-2q5oecfc]{display:block;position:fixed;top:5rem;left:calc(50% + 26rem);width:14rem}}
+</style></head> <body class="flex min-h-screen flex-col bg-white text-gray-900"> <header class="border-b border-gray-100"> <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5"> <a href="/zloginfo/" class="text-lg font-semibold tracking-tight">zlog</a> <div class="flex gap-6 text-sm text-gray-500"> <a href="/zlogblog/" class="transition hover:text-gray-900">Blog</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div class="relative" data-astro-cid-2q5oecfc> <article data-astro-cid-2q5oecfc> <header class="mb-10" data-astro-cid-2q5oecfc> <h1 class="mb-1 text-2xl font-semibold" data-astro-cid-2q5oecfc>아키텍처의 본질</h1> <p class="mb-3 text-sm text-gray-400" data-astro-cid-2q5oecfc>내가 생각하는 아키텍처란..</p> <div class="flex gap-3 text-xs text-gray-400" data-astro-cid-2q5oecfc> <time datetime="2026-03-06T00:00:00.000Z" data-astro-cid-2q5oecfc> 2026. 03. 06 </time> <span data-astro-cid-2q5oecfc>&middot;</span> <span data-astro-cid-2q5oecfc>7 min read</span> </div> <div class="mt-3 flex flex-wrap gap-2" data-astro-cid-2q5oecfc> <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 아키텍처 </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 설계 </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 도메인 </span> </div> </header> <div class="prose-custom" data-astro-cid-2q5oecfc>  <p><img src="/zlog/images/architecture/05.png" alt="아키텍처의 본질"/></p>
+<h2 id="우리는-왜-아키텍처를-필요로-할까">우리는 왜 아키텍처를 필요로 할까?</h2>
+<p>이 질문에 대답하기 위해서 나는 3년하고도 2주가 필요했다</p>
+<p>대학시절에는 아키텍처에 대해 존재, 관심조차 없었고<br/>
+직장생활을 하면서 계층형 아키텍처에 대해 인지는 하였지만 ‘다들 쓰니까..’ 생각하며 깊게 고민해보지 않았다</p>
+<p>하지만 2주전 코더의 탈을 벗어버리고자 시작한 과외, 엔지니어로서 첫 발걸음을 때고나서 많은 생각을 하게된 이후 아키텍처를 다시 바라보았다</p>
+<p><strong>아키텍처는 왜 필요로 하는가?</strong><br/>
+<strong>우리는 왜 개발을 하는가?</strong></p>
+<p>중요한건 개발이 아니였다</p>
+<p>우리가 작성하는 코드가 결국 <strong>무엇을 위해 존재하는가</strong> 그 답을 찾아가며 그에 대한 해답의 실마리가 보이기 시작했다</p>
+<p>** 우리의 코드는 왜 필요할까?</p>
+<p><a href="/zlog/blog/developer-pension-architecture/">이전 게시글</a>에서 가볍게 이야기했지만 개발에 대해서 다시 이야기해보고자 한다</p>
+<p>나는 개발을 이렇게 생각한다</p>
+<p><strong>우리가 해결하고자 하는 문제를 찾고 그 문제를 해결하는 방법</strong></p>
+<p>결국 개발의 핵심은 문제를 해결하는 방법, 비즈니스 로직이라고 생각한다</p>
+<p>카카오톡은 <strong>소통하기 어려운 문제</strong>를 해결하고자 나왔다
+배달의 민족은 <strong>배달 시켜먹기 어려운 문제</strong>를 해결하고자 나왔다
+토스 뱅크는 <strong>어려운 은행 송금, 은행 시스템</strong>을 해결하고자 나왔다
+당근은 <strong>중고 거래의 어려운 문제</strong>를 해결하고자 나왔다</p>
+<p>모두 문제를 해결하고자 시스템이 만들어졌고 출시되었고 시장의 반응을 얻었다</p>
+<p>만약 카카오톡에서 메시지 전송 로직이 무너진다면?
+배달의 민족에서 배달 주문 로직이 흔들린다면?</p>
+<p>그 서비스는 유지되기 어렵다</p>
+<p>비즈니스 로직은 서비스의 핵심인 것이다</p>
+<h2 id="아키텍처랑-비즈니스-로직이랑-무슨-상관인데">아키텍처랑 비즈니스 로직이랑 무슨 상관인데?</h2>
+<p>그렇다면 아키텍처란 무엇일까?</p>
+<p>아키텍처는 <strong>우리의 핵심 비즈니스를 지키기 위한 설계</strong>라고 생각한다</p>
+<p>계층형이든 헥사고날이든 그건 방법의 차이일 뿐이다</p>
+<p>결국 본질은 우리의 도메인을 외부로부터 지키는 것이다</p>
+<p>여기서 도메인이란 우리의 핵심 비즈니스를 말한다</p>
+<p>카카오톡의 메시지 전송,<br/>
+배달의 민족의 주문 처리,<br/>
+토스의 송금 서비스,<br/>
+당근의 중고 거래</p>
+<p>그 서비스가 존재하는 이유</p>
+<p>그게 <a href="https://enterprisecraftsmanship.com/posts/what-is-domain-logic/" rel="noopener noreferrer" target="_blank">도메인</a>이라고 생각한다</p>
+<h2 id="도메인은-왜-지켜야-할까">도메인은 왜 지켜야 할까?</h2>
+<p>이전 직장에서 게시글 목록을 조회하는 기능을 만들었다</p>
+<p>Service에서 JPA@Entity 객체와 Pageable 객체를 그대로 받아 쓰고있었다</p>
+<p>기능상으로 문제는 없었다</p>
+<p>만약 그때 DB를 MongoDB로 바꿔야 했다면?</p>
+<p>DB 하나를 바꾸는 건데 Service, Controller 전부 수정해야 했을 것이다</p>
+<p>우리의 비즈니스가 달라진게 아니었다</p>
+<p><strong>외부가 바뀌었는데 우리의 도메인이 흔들렸다</strong></p>
+<h2 id="외부의-변화에-도메인이-흔들리면-왜-안될까">외부의 변화에 도메인이 흔들리면 왜 안될까?</h2>
+<p>우리의 애플리케이션의 핵심은 비즈니스 로직</p>
+<p>즉, 도메인이다</p>
+<p>우리가 해결하고자 하는 핵심</p>
+<p>우리는 비즈니스 로직을 검증하기 위해 철저히 테스트하게 될 것이다</p>
+<p>그런데 <strong>외부의 변화에 우리 테스트가 흔들린다</strong></p>
+<p>다시 한번 생각해보자</p>
+<p>우리는 우리의 비즈니스 로직을 테스트하는 건가?
+외부 연결을 테스트하는 건가?</p>
+<p>도메인이 외부에 영향을 받는 순간 테스트는 더 이상 우리의 비즈니스를 검증하지 못한다</p>
+<h2 id="아키텍처의-본질">아키텍처의 본질</h2>
+<p>다시 한번 제목을 생각해보자</p>
+<p><strong>아키텍처의 본질</strong></p>
+<p>도메인이 외부에 영향을 받는 순간 테스트는 더 이상 우리의 비즈니스를 검증하지 못한다</p>
+<p>검증되지 않은 비즈니스를 누가 사용하길 원할까?</p>
+<p>어쩔 땐 되고 어쩔 땐 안되는 서비스를 나는 적어도 사용하지 않을 것이다</p>
+<p>우리는 <strong>도메인을 지켜야 한다</strong></p>
+<p>그게 내가 생각하는 아키텍처의 본질이다</p>
+<p>하지만 아키텍처는 지켜야할 도메인이 존재해야 의미가 있다</p>
+<p>도메인을 지키려고 하다 도메인이 세상에 나오지 못하면 아키텍처가 오히려 독이 된다</p>
+<p>그 간격을 잘 메우는 것이 우리의 역할이다</p>  </div> </article> <aside class="toc-aside" data-astro-cid-2q5oecfc> <nav class="sticky top-8" data-astro-cid-2q5oecfc> <p class="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase" data-astro-cid-2q5oecfc>
+목차
+</p> <ul class="space-y-1.5 text-[13px]" data-astro-cid-2q5oecfc> <li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#우리는-왜-아키텍처를-필요로-할까" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 우리는 왜 아키텍처를 필요로 할까? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#아키텍처랑-비즈니스-로직이랑-무슨-상관인데" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 아키텍처랑 비즈니스 로직이랑 무슨 상관인데? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#도메인은-왜-지켜야-할까" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 도메인은 왜 지켜야 할까? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#외부의-변화에-도메인이-흔들리면-왜-안될까" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 외부의 변화에 도메인이 흔들리면 왜 안될까? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#아키텍처의-본질" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 아키텍처의 본질 </a> </li> </ul> </nav> </aside> </div>  </main> <footer class="mt-auto border-t border-gray-100 py-6 text-center text-xs text-gray-400">
+&copy; 2026 zlog
+</footer></body></html>

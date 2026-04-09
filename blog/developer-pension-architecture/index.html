@@ -1,0 +1,136 @@
+<!DOCTYPE html><html lang="ko"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v6.1.5"><title>개발자의 연금, 아키텍처</title><meta name="description" content="현실과 미래의 타협"><link rel="canonical" href="https://zkzkzhzj.github.io/zlog/blog/developer-pension-architecture/"><!-- OG --><meta property="og:type" content="website"><meta property="og:url" content="https://zkzkzhzj.github.io/zlog/blog/developer-pension-architecture/"><meta property="og:title" content="개발자의 연금, 아키텍처"><meta property="og:description" content="현실과 미래의 타협"><!-- Sitemap --><link rel="sitemap" href="/zlogsitemap-index.xml"><!-- RSS --><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/zlogrss.xml"><link rel="stylesheet" href="/zlog/_astro/BaseLayout.C7UBDU8C.css">
+<style>.toc-aside[data-astro-cid-2q5oecfc]{display:none}@media(min-width:1280px){.toc-aside[data-astro-cid-2q5oecfc]{display:block;position:fixed;top:5rem;left:calc(50% + 26rem);width:14rem}}
+</style></head> <body class="flex min-h-screen flex-col bg-white text-gray-900"> <header class="border-b border-gray-100"> <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5"> <a href="/zloginfo/" class="text-lg font-semibold tracking-tight">zlog</a> <div class="flex gap-6 text-sm text-gray-500"> <a href="/zlogblog/" class="transition hover:text-gray-900">Blog</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div class="relative" data-astro-cid-2q5oecfc> <article data-astro-cid-2q5oecfc> <header class="mb-10" data-astro-cid-2q5oecfc> <h1 class="mb-1 text-2xl font-semibold" data-astro-cid-2q5oecfc>개발자의 연금, 아키텍처</h1> <p class="mb-3 text-sm text-gray-400" data-astro-cid-2q5oecfc>현실과 미래의 타협</p> <div class="flex gap-3 text-xs text-gray-400" data-astro-cid-2q5oecfc> <time datetime="2026-03-05T00:00:00.000Z" data-astro-cid-2q5oecfc> 2026. 03. 05 </time> <span data-astro-cid-2q5oecfc>&middot;</span> <span data-astro-cid-2q5oecfc>13 min read</span> </div> <div class="mt-3 flex flex-wrap gap-2" data-astro-cid-2q5oecfc> <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 아키텍처 </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 설계 </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 백엔드 </span> </div> </header> <div class="prose-custom" data-astro-cid-2q5oecfc>  <p><img src="/zlog/images/architecture/01.png" alt="개발자의 연금, 아키텍처"/></p>
+<h2 id="돌아가기만-하면-된다-살아가기만-하면-된다">돌아가기만 하면 된다, 살아가기만 하면 된다</h2>
+<p>저는 대학교 시절 처음 개발이라는 것을 접했어요</p>
+<p>시작은 안드로이드 개발이었어요</p>
+<p>모든게 새롭고 재미있었죠</p>
+<p>내가 입력한 코드에 따라 내가 원하는 결과가 나온다니<br/>
+제가 설계하는 대로 동작했죠</p>
+<p>그때 저는 딱 하나만 신경썼어요</p>
+<p><strong>‘돌아가면 된다’</strong></p>
+<p>메인 액티비티 하나에 수백 줄 화면 로직, DB 접근, 계산 모두 모여있었어요</p>
+<p>아키텍처? 그런 단어는 제 사전에 존재하지 않았죠</p>
+<p>지금 생각해보면 그건 연금을 전혀 넣지 않은 채 살아가는 것과 같았어요</p>
+<p>지금 당장은 괜찮거든요</p>
+<p><strong>문제는 지금 닥쳐오지 않아요</strong></p>
+<h2 id="첫-연금-가입-계층형-아키텍처">첫 연금 가입, 계층형 아키텍처</h2>
+<p>먼저 이야기하고 싶은게 있어요</p>
+<p>개발이 무엇일까?</p>
+<p>다양한 의견들이 나올 수 있지만 저는 이렇게 생각하고 있어요</p>
+<blockquote>
+<p>우리가 겪는 문제를 핵심 비즈니스로 해결하는 것</p>
+</blockquote>
+<p>결국 개발의 핵심, 무기는 <strong>비즈니스 로직</strong>이라고 생각해요</p>
+<div class="separator">···</div>
+<p>웹 SI 개발을 하는 회사에 취직하고 처음으로 계층형 아키텍처를 만났어요</p>
+<p>흔히 말하는 계층형 아키텍처</p>
+<p><img src="/zlog/images/architecture/02.png" alt="계층형 아키텍처"/></p>
+<p>역할에 따라 계층을 나누고, 데이터의 흐름은 단방향으로 흘러갔어요</p>
+<p>Spring 프로젝트로 설명을 하자면</p>
+<p>Presentation -&gt; Controller = UI와 통신을 담당<br/>
+Application -&gt; Service = 우리의 핵심, 비즈니스 로직<br/>
+Data -&gt; Repository = DB와의 연결을 담당</p>
+<p>이런 형식의 구조가 되는거죠</p>
+<p>이렇게 구조적으로 나뉘어있으니 엄청나게 편했어요</p>
+<ol>
+<li>각자 맡은 역할에 따라 팀원별 분업이 자연스럽게 되었어요</li>
+<li>그 당시의 저 같은 신입 사원이 입사하더라도 구조 파악이 빠르게 되었고 소스를 찾아가기 편했어요</li>
+</ol>
+<p>만약 처음 개발을 했던 저처럼 회사 코드가 Controller에 다 몰려있었다면?</p>
+<p>분업도 힘들뿐더러 신입 개발자는 코드 분석하기에도 힘들었을거에요</p>
+<p>계층형 아키텍처를 도입하지 않았더라면 개발을 훨씬 빨랐겠죠<br/>
+파일 생성하고 어떻게 나눌지 정하고.. 그 과정이 사라지니까요</p>
+<p>그런데 그게 꼭 연금이랑 닮았어요</p>
+<p>연금을 안내면 지금 당장은 돈이 더 많은 것 같잖아요<br/>
+하지만 나중에 그 몇 배를 고통으로 돌려받아요</p>
+<p><strong>지금의 불편함이 나의 미래를 지켜주는 거죠</strong></p>
+<p>그런데 저는 그 연금이 새고 있다는걸 한참 뒤에나 깨달았어요</p>
+<h2 id="우리의-비즈니스가-위험했다">우리의 비즈니스가 위험했다</h2>
+<p>처음에는 계층형 아키텍처가 완전 무결하다고 생각했어요</p>
+<p>그런데 어느 순간 보였어요</p>
+<p>우리의 <strong>비즈니스가 오염</strong>되고 있었다는 사실을</p>
+<p>저는 그때 당시 페이징 처리를 Pageable 객체를 사용해서 하고 있었어요</p>
+<p>그리고 Entity 객체도 직접적으로 참조해서 사용하고 있었죠</p>
+<p>아래처럼 말이에요</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="java"><code><span class="line"><span style="color:#6A737D">// Service가 JPA를 직접 알고 있는 상황(JPA@Entity, Pageable)</span></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#E1E4E8"> Page</span><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">PostEntity</span><span style="color:#F97583">&gt;</span><span style="color:#B392F0"> getPosts</span><span style="color:#E1E4E8">(Pageable pageable) {</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> postRepository.</span><span style="color:#B392F0">findAll</span><span style="color:#E1E4E8">(pageable); </span><span style="color:#6A737D">// JPA가 Service에 침투</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>자연스럽게 Pageable 객체를 Controller -&gt; Service -&gt; Repository로 매개변수를 사용해서 넘겨주고 있었고</p>
+<p>JPA Entity 객체를 Repository -&gt; Service -&gt; Controller로 반환하고 있었죠</p>
+<p>지금 다시 생각해보면 문제가 있었어요</p>
+<p>만약 페이징 처리 방식을 바꾸었더라면?<br/>
+데이터베이스 종류가 바뀌었다면? NoSQL DB를 사용해야했다면?</p>
+<p><img src="/zlog/images/architecture/03.png" alt="비즈니스 오염"/></p>
+<p>Data 계층의 변경이 Service, Controller까지 전파되어 수정해줘야해요</p>
+<p>계층형이 나쁜 게 아니에요<br/>
+방향만 정해줬을 뿐, <strong>무엇에 의존하는지는 막아주지 않았어요</strong><br/>
+계층을 나눠도 JPA 타입이 Service까지 흘러들어오면 결국 Data가 Business를 오염시키는 거죠</p>
+<p>이를 도메인(핵심 비즈니스)오염이라고 부르기도 해요</p>
+<p>연금은 가입했지만 수수료가 너무 높아 실질적으로 쌓이는 게 적었던 거에요</p>
+<h2 id="더-좋은-연금을-찾아서-헥사고날-아키텍처">더 좋은 연금을 찾아서: 헥사고날 아키텍처</h2>
+<p>계층형 아키텍처에서 우리의 핵심 Application이 Data에 오염되는 것을 직접 눈으로 확인했어요</p>
+<p>그렇다면 이 문제를 어떻게 해결해야할까요?</p>
+<p>우리는 이미 Application이 Data에 너무 의존적이여서 발생한 문제라고 인지를 했어요</p>
+<p>그러면 그 의존을 약하게 만들면 어떨까요?</p>
+<p>여기서 중요한 원칙 하나가 나와요</p>
+<p>DIP, 의존 역전 원칙이라고 부르는 그것이죠</p>
+<p>헥사고날 아키텍처에서 제일 중요한 개념이에요</p>
+<p><strong>구현체를 직접 아는 게 아니라, 그 상위 개념(약속)만 알면 된다</strong></p>
+<p>우리는 이전에 Application에서 직접적으로 JPA Entity, Pageable 객체를 알고있었어요</p>
+<p>그래서 DB가 바뀌거나 페이징 처리 방식이 바뀌면 Application에서 직접적으로 영향을 받았죠</p>
+<p>만약 우리의 Application에서 ‘게시글 목록을 요청하면 게시글 리스트를 돌려준다’라는 약속만 알고 있다면 어떻게 될까요?</p>
+<p>JPA를 쓰든 Mybatis를 쓰든 MongoDB를 쓰든 Application에선 몰라도 돼요</p>
+<p>만약 예전의 소스를 바꾼다면 아래처럼 바뀔 것 같잖아요</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="java"><code><span class="line"><span style="color:#6A737D">// Service는 약속(PostPort)만 알아요</span></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#E1E4E8"> PageResponse</span><span style="color:#F97583">&lt;</span><span style="color:#E1E4E8">PostDomain</span><span style="color:#F97583">&gt;</span><span style="color:#B392F0"> getPosts</span><span style="color:#E1E4E8">(PageRequest request) {</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> postPort.</span><span style="color:#B392F0">findAll</span><span style="color:#E1E4E8">(request);</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>그 약속을 지키는건 DB 구현체가 할 일이고 우리는 약속에 따라 우리의 비즈니스 로직을 구현하면 되니까요</p>
+<p><img src="/zlog/images/architecture/04.png" alt="헥사고날 아키텍처 구조"/></p>
+<p>여기서 외부와의 통신을 위한 약속은 Port라고 하고<br/>
+그 약속을 지킨 구현체는 Adapter라고 불러요</p>
+<p>그래서 헥사고날 아키텍처는 Port &amp; Adapter 아키텍처라고 불리기도 해요</p>
+<p>외부에서는 우리의 핵심 Application과 통신을 위해서 약속 규정을 철저히 지키는 Adapter 구현체를 만들어요</p>
+<p>모든 외부 통신은 Port의 규정을 지켜야 가능해요</p>
+<p>UI에서 우리 Application을 호출할 때도 마찬가지예요</p>
+<p>정해진 약속대로 요청이 들어오고, Application은 그 약속대로 응답하면 돼요<br/>
+이렇게 모든 통신이 Port라는 약속을 통해서만 이루어지기 때문에 Application은 외부가 어떻게 바뀌든 영향을 받지 않아요</p>
+<p>연금으로 치면 원금이 외부 시장 변화에 흔들리지 않도록 보호장치를 만든 거예요<br/>
+우리의 핵심 비즈니스가 바로 그 원금이에요</p>
+<h2 id="좋은-연금도-때를-가려야-한다">좋은 연금도 때를 가려야 한다</h2>
+<p>그렇다고 헥사고날 아키텍처를 무조건 적용하는 것도 좋은 방법은 아니에요</p>
+<p>헥사고날 아키텍처를 구성하기 위해선 우리의 비즈니스 로직에 대한 <strong>모든 외부 흐름을 약속으로 정의</strong>해야해요</p>
+<p>그리고 각각의 약속에 대한 구현체들이 필요하죠</p>
+<p>기본적으로 시간이 많이 들어가고 시스템이 복잡해질 수 있어요</p>
+<p>제가 SI에서 근무할 때는 계층형 아키텍처로 빠르게 개발을 했음에도 시간이 부족했었거든요</p>
+<p>만약 헥사고날 아키텍처를 고집했다면 프로젝트 마무리를 쉽게 짓지 못했을거에요</p>
+<p>지금 당장에 쓸 돈도 없는데 연금을 유지하는 것도 부담이니까요</p>
+<p>결국 중요한 건 <strong>내 상황을 아는 것</strong>이에요</p>
+<p>빠르게 납품해야 하는 프로젝트인지, 오랫동안 유지보수해야 하는 서비스인지<br/>
+팀의 규모는 어떤지, 비즈니스가 얼마나 자주 바뀌는지<br/>
+아키텍처는 그 답에 따라 골라야 해요</p>
+<p>연금 상품도 내 소득과 나이에 맞는 걸 골라야 하듯이요</p>
+<h2 id="우리의-숙제">우리의 숙제</h2>
+<p>좋은 아키텍처가 미래를 지켜주는 건 맞아요</p>
+<p>하지만 현재를 버텨내지 못하면 미래 자체가 없어요</p>
+<p>미래를 위한 선택이 현재를 망가뜨리면, 그건 좋은 선택이 아니에요</p>
+<p>현재 우리가 처한 상황에 맞는 아키텍처를 고르고 설계하는 것이 중요해요</p>
+<p>아키텍처는 목적이 아니라 도구예요</p>
+<p>돌아보면 저는 아키텍처를 공부하면서 단순히 기술을 배운 게 아니었어요</p>
+<p>‘돌아가면 된다’고 생각했던 대학생이<br/>
+계층을 나누는 것만으로 감탄했던 신입이<br/>
+그 구조 속에서도 비즈니스가 오염되고 있다는 걸 눈치채기까지<br/>
+꽤 오랜 시간이 걸렸어요</p>
+<p>아직도 저는 완벽한 아키텍처를 몰라요</p>
+<p>앞으로도 계속 고민하겠죠</p>
+<p>하지만 지금 <strong>내가 짜는 코드가 미래의 나를 얼마나 편하게, 혹은 힘들게 할지를 한 번쯤 생각하게 된 것</strong></p>
+<p>그게 가장 큰 변화인 것 같아요</p>
+<p>결국 아키텍처도, 연금도 현실과 미래의 타협이에요</p>
+<p>지금의 나의 비즈니스를 잃지 않으면서, 미래의 나 또는 다른 사람을 위해 우리의 비즈니스를 지켜주는 것</p>
+<p>그게 제가 생각하는 좋은 설계에요</p>  </div> </article> <aside class="toc-aside" data-astro-cid-2q5oecfc> <nav class="sticky top-8" data-astro-cid-2q5oecfc> <p class="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase" data-astro-cid-2q5oecfc>
+목차
+</p> <ul class="space-y-1.5 text-[13px]" data-astro-cid-2q5oecfc> <li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#돌아가기만-하면-된다-살아가기만-하면-된다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 돌아가기만 하면 된다, 살아가기만 하면 된다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#첫-연금-가입-계층형-아키텍처" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 첫 연금 가입, 계층형 아키텍처 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#우리의-비즈니스가-위험했다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 우리의 비즈니스가 위험했다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#더-좋은-연금을-찾아서-헥사고날-아키텍처" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 더 좋은 연금을 찾아서: 헥사고날 아키텍처 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#좋은-연금도-때를-가려야-한다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 좋은 연금도 때를 가려야 한다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#우리의-숙제" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 우리의 숙제 </a> </li> </ul> </nav> </aside> </div>  </main> <footer class="mt-auto border-t border-gray-100 py-6 text-center text-xs text-gray-400">
+&copy; 2026 zlog
+</footer></body></html>
