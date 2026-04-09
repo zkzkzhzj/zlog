@@ -6,7 +6,7 @@ interface Props {
 }
 
 const { title, description = "zkzkzhzj의 블로그", ogImage } = Astro.props;
-const base = import.meta.env.BASE_URL;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
