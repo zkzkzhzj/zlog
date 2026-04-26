@@ -4,13 +4,29 @@ import { getCollection } from "astro:content";
 import dayjs from "dayjs";
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-const posts = (await getCollection("blog")).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = (await getCollection("blog"))
+  .filter((post) => !post.data.ai && !post.data.retro && !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
 <BaseLayout title="Blog — zlog">
-  <h1 class="mb-10 text-2xl font-semibold">Blog</h1>
+  <h1 class="mb-6 text-2xl font-semibold">Blog</h1>
+
+  <div class="mb-8 flex gap-2 border-b border-gray-200">
+    <a
+      href={`${base}blog/`}
+      class="border-b-2 border-gray-900 px-3 py-2 text-sm font-medium text-gray-900"
+    >
+      전체
+    </a>
+    <a
+      href={`${base}blog/ai/`}
+      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
+    >
+      AI 작성
+    </a>
+  </div>
+
   <ul class="flex flex-col gap-1">
     {
       posts.map((post) => (

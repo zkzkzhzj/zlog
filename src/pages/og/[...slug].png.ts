@@ -10,10 +10,12 @@ const fontData = fs.readFileSync(fontPath);
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { title: post.data.title },
-  }));
+  return posts
+    .filter((post) => !post.data.draft)
+    .map((post) => ({
+      params: { slug: post.id },
+      props: { title: post.data.title },
+    }));
 }
 
 export const GET: APIRoute = async ({ props }) => {

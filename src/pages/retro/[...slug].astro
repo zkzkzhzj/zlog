@@ -6,7 +6,7 @@ import readingTime from "reading-time";
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   return posts
-    .filter((post) => !post.data.retro && !post.data.draft)
+    .filter((post) => post.data.retro && !post.data.draft)
     .map((post) => ({
       params: { slug: post.id },
       props: { post },

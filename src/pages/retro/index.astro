@@ -1,0 +1,47 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import dayjs from "dayjs";
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const posts = (await getCollection("blog"))
+  .filter((post) => post.data.retro && !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout title="Retro — zlog">
+  <h1 class="mb-6 text-2xl font-semibold">Retro</h1>
+
+  {
+    posts.length > 0 ? (
+      <ul class="flex flex-col gap-1">
+        {posts.map((post) => (
+          <li>
+            <a
+              href={`${base}retro/${post.id}/`}
+              class="group flex items-baseline justify-between gap-4 rounded-md px-3 py-3 transition hover:bg-gray-50"
+            >
+              <div>
+                <h2 class="text-[15px] text-gray-700 group-hover:text-gray-900">
+                  {post.data.title}
+                </h2>
+                {post.data.description && (
+                  <p class="mt-1 text-xs text-gray-400">
+                    {post.data.description}
+                  </p>
+                )}
+              </div>
+              <time class="shrink-0 text-xs text-gray-400">
+                {dayjs(post.data.pubDate).format("YYYY. MM. DD")}
+              </time>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="py-20 text-center text-sm text-gray-400">
+        아직 회고 글이 없습니다.
+      </p>
+    )
+  }
+</BaseLayout>

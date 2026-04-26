@@ -3,7 +3,9 @@ import type { APIContext } from "astro";
 import { getCollection } from "astro:content";
 
 export async function GET(context: APIContext) {
-  const posts = await getCollection("blog");
+  const posts = (await getCollection("blog")).filter(
+    (post) => !post.data.draft,
+  );
 
   return rss({
     title: "zlog",
@@ -13,7 +15,7 @@ export async function GET(context: APIContext) {
       title: post.data.title,
       description: post.data.description,
       pubDate: post.data.pubDate,
-      link: `/blog/${post.id}/`,
+      link: post.data.retro ? `/retro/${post.id}/` : `/blog/${post.id}/`,
     })),
   });
 }
