@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="ko"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v6.1.5"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>2026-04-28 학습 노트</title><meta name="description" content="배우고 정리한 내용을 가볍게 기록한다."><link rel="canonical" href="https://zlog.page/blog/study/2026-04-29/"><!-- OG --><meta property="og:type" content="website"><meta property="og:url" content="https://zlog.page/blog/study/2026-04-29/"><meta property="og:title" content="2026-04-28 학습 노트"><meta property="og:description" content="배우고 정리한 내용을 가볍게 기록한다."><!-- Search Console --><meta name="google-site-verification" content="QL5oG6ROeQ_efrAdk4Xk9ZLbSRYdxWNyzD2FT7BFrmU"><meta name="naver-site-verification" content="d38c673504a43b7081a895abd046ec7cfaba76c4"><!-- Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-HJR3WF26N4"></script><script type="module">window.dataLayer=window.dataLayer||[];function a(){dataLayer.push(arguments)}a("js",new Date);a("config","G-HJR3WF26N4");</script><!-- Sitemap --><link rel="sitemap" href="/sitemap-index.xml"><!-- RSS --><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml"><link rel="stylesheet" href="/_astro/BaseLayout.jE1NYQEK.css">
+<style>.toc-aside[data-astro-cid-2q5oecfc]{display:none}@media(min-width:1280px){.toc-aside[data-astro-cid-2q5oecfc]{display:block;position:fixed;top:5rem;left:calc(50% + 26rem);width:14rem}}
+</style></head> <body class="flex min-h-screen flex-col bg-white text-gray-900"> <header class="border-b border-gray-100"> <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5"> <a href="/" class="text-lg font-semibold tracking-tight">zlog</a> <div class="flex gap-6 text-sm text-gray-500"> <a href="/blog/" class="transition hover:text-gray-900">Blog</a> <a href="/retro/" class="transition hover:text-gray-900">Retro</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div class="relative" data-astro-cid-2q5oecfc> <article data-astro-cid-2q5oecfc> <header class="mb-10" data-astro-cid-2q5oecfc> <h1 class="mb-1 text-2xl font-semibold" data-astro-cid-2q5oecfc>2026-04-28 학습 노트</h1> <p class="mb-3 text-sm text-gray-400" data-astro-cid-2q5oecfc>배우고 정리한 내용을 가볍게 기록한다.</p> <div class="flex gap-3 text-xs text-gray-400" data-astro-cid-2q5oecfc> <time datetime="2026-04-28T00:00:00.000Z" data-astro-cid-2q5oecfc> 2026. 04. 28 </time> <span data-astro-cid-2q5oecfc>&middot;</span> <span data-astro-cid-2q5oecfc>7 min read</span> </div> <div class="mt-3 flex flex-wrap gap-2" data-astro-cid-2q5oecfc> <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> study </span> </div> </header> <div class="prose-custom" data-astro-cid-2q5oecfc>  <h1 id="공부한-내용을-짧게-기록한다">공부한 내용을 짧게 기록한다</h1>
+<h2 id="httponly-cookie-secure-samesite">HttpOnly cookie, Secure, SameSite</h2>
+<h3 id="기억할-점">기억할 점</h3>
+<p>기존에는 토큰을 LocalStorage에 평문으로 저장<br/>
+이 경우 js에서 접근하여 탈취할 수 있어 위험(XSS 공격 취약)<br/>
+HttpOnly cookie를 도입하여 토큰 탈취를 방지<br/>
+서버가 응답 본문에 토큰을 echo 하거나 디버그 로그에 찍으면 그 경로로 토큰이 새어나감</p>
+<p>MITM - 중간자 공격[네트워크 탈취] 방지</p>
+<p>Secure 플래그가 있으면 HTTPS 요청에만 첨부<br/>
+다만, 첫 요청의 경우 HTTP로 시도하게 되는데 이때 공격자가 평문 요청을 탈취 가능<br/>
+사용자가 공격자 페이지에서 로그인 시도를 하면 문제 발생</p>
+<p>HSTS(HTTP Strict Transport Security) 설정을 하여 1차 보안<br/>
+HSTS 설정을 하게 되면 한 번이라도 접속한다면 설정한 시간까지 이후 접속은 전부 HTTPS로 강제<br/>
+HSTS가 없으면 사용자가 직접 http:// 입력했을 때 평문 요청이 시도됨</p>
+<p>CloudFlare에서 HSTS를 키기위해 확인해보니 SSL 모드가 꺼져있는 것을 확인<br/>
+CloudFlare 접근은 HTTPS로 접근하고 있었으나 CloudFlare에서 EC2 서버로는 HTTP 요청 중으로 확인(Flexible)<br/>
+Full (strict) 환경으로 변경(SSL 처리)<br/>
+Origin Certificate, Private Key nginx 등록 및 테스트 완료</p>
+<p>첫 요청도 막는 방법<br/>
+<a href="https://hstspreload.org/" rel="noopener noreferrer" target="_blank">https://hstspreload.org/</a> 등록 요청<br/>
+브라우저 자체에 HTTPS로만 접속하게 해달라고 등록 요청 하는 방법<br/>
+확실히 보장되지만 등록/제거 시간이 많이걸림<br/>
+내 프로젝트에는 적합하지 않다고 판단</p>
+<p>nginx 리다이렉트 설정 사용(HTTP -&gt; HTTPS)</p>
+<ul>
+<li>nginx conf 적용이 안될경우 nginx.conf 내부 확인(매칭 필요)</li>
+</ul>
+<p>nginx 설정에 대해서 맛볼 수 있었다(프록시 설정)<br/>
+nginx 의 역할은 사용자 요청을 받아 내부 서비스(frontend/backend) 로 전달하는 리버스 프록시<br/>
+외부는 nginx 만 보고 내부에 어떤 서비스가 몇 개 떠있는지 모름<br/>
+upstream 블록 — 내부 서비스를 이름으로 묶음<br/>
+location 분기 — 경로별로 어디로 보낼지 라우팅<br/>
+proxy_pass — 실제 요청을 어디로 보낼지<br/>
+proxy_set_header — 백엔드로 보낼 때 추가하는 헤더<br/>
+WebSocket location - 일반 HTTP 는 1요청-1응답 후 끊음, WebSocket 은 같은 TCP 위에서 양방향 유지</p>
+<p>Cloudflare 521, 522<br/>
+521 Web Server Is Down -&gt; TCP 도달은 하였으나 nginx 443 접근 실패(443 안떠있었음)<br/>
+522 Connection time out -&gt; TCP 도달 자체가 안됨(보안 그룹 이슈)</p>
+<h3 id="다음에-더-볼-것">다음에 더 볼 것</h3>
+<p>SSL/HSTS/CAA/DNSSEC은 같은 보안 영역이지만 막는 공격 종류가 다 다름</p>
+<p>TLS handshake 흐름</p>
+<ul>
+<li>ClientHello → ServerHello → Certificate → KeyExchange → Finished</li>
+<li>Origin CA 인증서가 Cloudflare↔EC2 사이의 handshake 에서 어떻게 검증되는가</li>
+<li>TLS 1.3 은 1-RTT 로 단축, 0-RTT 옵션도 있음 (replay 공격 위험과 트레이드오프)</li>
+</ul>
+<p>SNI (Server Name Indication)</p>
+<ul>
+<li>한 IP 에서 여러 도메인 호스팅 시 어떤 인증서를 쓸지 ClientHello 단계에서 알려주는 확장</li>
+<li>TLS 1.2/1.3 에서 SNI 가 평문이라 ISP·검열 시스템이 어느 사이트 가는지 봄 → ECH (Encrypted Client Hello) 가 차세대, Cloudflare 가 2023~ 부분 지원 시작</li>
+</ul>
+<p>HTTP/2 vs HTTP/1.1 — 왜 nginx 에서 켜는가</p>
+<ul>
+<li>HTTP/2 : 멀티플렉싱(한 TCP 위에서 여러 요청 동시), 헤더 압축(HPACK)</li>
+<li>HTTP/1.1 : 요청당 1 응답, head-of-line blocking 발생</li>
+<li>WebSocket 은 HTTP/1.1 Upgrade 만 가능 — 그래서 ws location 에 proxy_http_version 1.1 명시</li>
+<li>HTTP/3 (QUIC) 도 있는데 운영 안정 후 검토할 영역</li>
+</ul>
+<p>X-Forwarded-* 헤더의 신뢰 체인</p>
+<ul>
+<li>사용자 → Cloudflare → nginx → Spring</li>
+<li>각 단계가 X-Forwarded-For 에 자기 본 IP 추가</li>
+<li>Spring 이 신뢰할 단계 수(trusted proxies) 명시 안 하면 클라이언트가 헤더 위조 가능</li>
+<li>server.forward-headers-strategy=framework + Cloudflare 의 CF-Connecting-IP 활용 검토</li>
+</ul>
+<p>Cloudflare ↔ origin 의 keep-alive 와 TCP 풀</p>
+<ul>
+<li>매 요청마다 TLS handshake 새로 하면 비용 큼</li>
+<li>Cloudflare 는 origin 과 keep-alive 연결 풀 유지 — 한 번 handshake 후 재사용</li>
+<li>nginx 의 keepalive_timeout 너무 짧으면 풀이 자주 끊겨 latency ↑</li>
+</ul>
+<p>Cloudflare Origin CA 가 공인 CA 가 아닌 이유</p>
+<ul>
+<li>Cloudflare 만 신뢰하는 사설 CA 체인</li>
+<li>공인 CA 발급은 도메인 검증 절차 + ACME 프로토콜 + CA/B Forum 규정 → 비용·복잡도 ↑</li>
+<li>Cloudflare 는 자기 인프라에서만 쓰는 인증서라 공인일 필요 없음</li>
+<li>15년이라는 긴 유효기간도 그래서 가능 (공인 CA 는 보통 90일 ~ 1~2년)</li>
+</ul>
+<p>Authoritative DNS vs Recursive resolver</p>
+<ul>
+<li>Cloudflare 가 우리 도메인 DNS 의 Authoritative 측</li>
+<li>사용자 PC 의 1.1.1.1 / 8.8.8.8 은 Recursive 측 — 캐싱·재귀 조회</li>
+<li>CAA 레코드는 Authoritative 가 답하고 CA 가 인증서 발급 직전 조회</li>
+<li>DNS TTL 짧을수록 변경 반영 빠르지만 부하 ↑</li>
+</ul>
+<h1 id="종합-회고">종합 회고</h1>
+<p>페어 프로그래밍을 자칭했지만 코드를 전체 보지 않고 올려 문제가 발생한 이슈가 있었다(#40 issue)<br/>
+코드를 전체적으로 쭉 보고 한번 프로젝트 리뷰를 한번 해야겠다</p>
+<p>그래도 처음으로 왜? 되물으며 파고들어 본 좋은 경험이었다</p>  </div> <section class="mt-16 border-t border-gray-100 pt-10"> <script src="https://giscus.app/client.js" data-repo="zkzkzhzj/zlog" data-repo-id="R_kgDOR9wd0Q" data-category="General" data-category-id="DIC_kwDOR9wd0c4C6cB0" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="light" data-lang="ko" crossorigin="anonymous" async></script> </section> </article> <aside class="toc-aside" data-astro-cid-2q5oecfc> <nav class="sticky top-8" data-astro-cid-2q5oecfc> <p class="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase" data-astro-cid-2q5oecfc>
+목차
+</p> <ul class="space-y-1.5 text-[13px]" data-astro-cid-2q5oecfc> <li style="padding-left: -12px" data-astro-cid-2q5oecfc> <a href="#공부한-내용을-짧게-기록한다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 공부한 내용을 짧게 기록한다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#httponly-cookie-secure-samesite" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> HttpOnly cookie, Secure, SameSite </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#기억할-점" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 기억할 점 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#다음에-더-볼-것" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 다음에 더 볼 것 </a> </li><li style="padding-left: -12px" data-astro-cid-2q5oecfc> <a href="#종합-회고" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 종합 회고 </a> </li> </ul> </nav> </aside> </div>  </main> <footer class="mt-auto border-t border-gray-100 py-6 text-center text-xs text-gray-400">
+&copy; 2026 zlog
+</footer></body></html>
