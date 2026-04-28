@@ -4,6 +4,7 @@ import satori from "satori";
 import sharp from "sharp";
 import fs from "node:fs";
 import path from "node:path";
+import { getContentPath } from "../../utils/content";
 
 const fontPath = path.resolve("src/assets/fonts/Pretendard-Regular.woff");
 const fontData = fs.readFileSync(fontPath);
@@ -13,7 +14,7 @@ export async function getStaticPaths() {
   return posts
     .filter((post) => !post.data.draft)
     .map((post) => ({
-      params: { slug: post.id },
+      params: { slug: getContentPath(post.id) },
       props: { title: post.data.title },
     }));
 }

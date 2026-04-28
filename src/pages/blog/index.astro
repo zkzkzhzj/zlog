@@ -2,14 +2,15 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import dayjs from "dayjs";
+import { getBlogSlug } from "../../utils/content";
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const posts = (await getCollection("blog"))
-  .filter((post) => !post.data.ai && !post.data.retro && !post.data.draft)
+  .filter((post) => !post.data.retro && !post.data.draft)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
-<BaseLayout title="Blog — zlog">
+<BaseLayout title="Blog · zlog">
   <h1 class="mb-6 text-2xl font-semibold">Blog</h1>
 
   <div class="mb-8 flex gap-2 border-b border-gray-200">
@@ -17,13 +18,19 @@ const posts = (await getCollection("blog"))
       href={`${base}blog/`}
       class="border-b-2 border-gray-900 px-3 py-2 text-sm font-medium text-gray-900"
     >
-      전체
+      Posts
     </a>
     <a
       href={`${base}blog/ai/`}
       class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
     >
-      AI 작성
+      AI
+    </a>
+    <a
+      href={`${base}blog/study/`}
+      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
+    >
+      Study
     </a>
   </div>
 
@@ -32,7 +39,7 @@ const posts = (await getCollection("blog"))
       posts.map((post) => (
         <li>
           <a
-            href={`${base}blog/${post.id}/`}
+            href={`${base}blog/${getBlogSlug(post.id)}/`}
             class="group flex items-baseline justify-between gap-4 rounded-md px-3 py-3 transition hover:bg-gray-50"
           >
             <div>

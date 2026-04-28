@@ -6,11 +6,11 @@ import { getBlogSlug } from "../../../utils/content";
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const posts = (await getCollection("blog"))
-  .filter((post) => post.data.ai && !post.data.retro && !post.data.draft)
+  .filter((post) => post.data.study && !post.data.retro && !post.data.draft)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
-<BaseLayout title="AI · zlog">
+<BaseLayout title="Study · zlog">
   <h1 class="mb-6 text-2xl font-semibold">Blog</h1>
 
   <div class="mb-8 flex gap-2 border-b border-gray-200">
@@ -22,13 +22,13 @@ const posts = (await getCollection("blog"))
     </a>
     <a
       href={`${base}blog/ai/`}
-      class="border-b-2 border-gray-900 px-3 py-2 text-sm font-medium text-gray-900"
+      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
     >
       AI
     </a>
     <a
       href={`${base}blog/study/`}
-      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
+      class="border-b-2 border-gray-900 px-3 py-2 text-sm font-medium text-gray-900"
     >
       Study
     </a>
@@ -62,7 +62,7 @@ const posts = (await getCollection("blog"))
       </ul>
     ) : (
       <p class="py-20 text-center text-sm text-gray-400">
-        No AI posts yet.
+        No study notes yet.
       </p>
     )
   }

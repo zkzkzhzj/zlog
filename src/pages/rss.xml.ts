@@ -1,6 +1,7 @@
 import rss from "@astrojs/rss";
 import type { APIContext } from "astro";
 import { getCollection } from "astro:content";
+import { getPostPermalink } from "../utils/content";
 
 export async function GET(context: APIContext) {
   const posts = (await getCollection("blog")).filter(
@@ -15,7 +16,7 @@ export async function GET(context: APIContext) {
       title: post.data.title,
       description: post.data.description,
       pubDate: post.data.pubDate,
-      link: post.data.retro ? `/retro/${post.id}/` : `/blog/${post.id}/`,
+      link: getPostPermalink(post),
     })),
   });
 }
