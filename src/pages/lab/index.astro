@@ -1,0 +1,87 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Lab · zlog" description="작은 실험과 도구를 모아둔 공간">
+  <h1 class="mb-6 text-2xl font-semibold">Lab</h1>
+
+  <section class="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+    <p class="mb-3 text-sm text-gray-500">
+      자기전 어두운 화면을 만들기 위한 버튼
+    </p>
+    <button
+      type="button"
+      id="open-black"
+      class="inline-flex cursor-pointer items-center rounded-full bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-black"
+    >
+      Black
+    </button>
+  </section>
+
+  <button
+    type="button"
+    id="black-overlay"
+    aria-label="검은 화면 닫기"
+    class="group fixed inset-0 z-50 hidden h-screen w-screen cursor-pointer border-0 bg-black p-0"
+  >
+    <span
+      class="pointer-events-none absolute right-6 bottom-6 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+    >
+      <span
+        class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs tracking-[0.18em] text-white/55 uppercase"
+      >
+        Click to exit
+      </span>
+    </span>
+    <span class="sr-only">검은 화면 닫기</span>
+  </button>
+
+  <script>
+    const openButton = document.getElementById("open-black");
+    const overlay = document.getElementById("black-overlay");
+
+    function showOverlay() {
+      overlay?.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function hideOverlay() {
+      overlay?.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+
+    async function openBlackScreen() {
+      showOverlay();
+
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        }
+      } catch {
+        // Leave the overlay open even if fullscreen is blocked.
+      }
+    }
+
+    async function closeBlackScreen() {
+      if (document.fullscreenElement) {
+        try {
+          await document.exitFullscreen();
+        } catch {
+          hideOverlay();
+        }
+        return;
+      }
+
+      hideOverlay();
+    }
+
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) {
+        hideOverlay();
+      }
+    });
+
+    openButton?.addEventListener("click", openBlackScreen);
+    overlay?.addEventListener("click", closeBlackScreen);
+  </script>
+</BaseLayout>
