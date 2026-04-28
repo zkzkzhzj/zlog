@@ -6,7 +6,13 @@ import { getBlogSlug } from "../../utils/content";
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const posts = (await getCollection("blog"))
-  .filter((post) => !post.data.retro && !post.data.draft)
+  .filter(
+    (post) =>
+      !post.data.ai &&
+      !post.data.study &&
+      !post.data.retro &&
+      !post.data.draft,
+  )
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
