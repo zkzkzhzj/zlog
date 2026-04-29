@@ -23,3 +23,7 @@ pnpm-debug.log*
 # IDE setting folders
 .idea/
 .vscode/
+
+# local Codex settings
+.claude/settings.local.json
+.codex/settings.local.json

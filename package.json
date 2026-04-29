@@ -10,6 +10,8 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "deploy": "astro build && pagefind --site dist && gh-pages -d dist -b main --dotfiles",
+    "english:today": "node scripts/create-english-daily-post.mjs",
+    "english:today:deep": "node scripts/create-english-daily-post.mjs --deep",
     "format": "prettier --write .",
     "astro": "astro"
   },

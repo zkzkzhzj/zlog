@@ -10,9 +10,9 @@ const blog = defineCollection({
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     tags: z.array(z.string()).default([]),
-    ai: z.boolean().default(false),
-    study: z.boolean().default(false),
-    retro: z.boolean().default(false),
+    category: z
+      .enum(["general", "ai", "study", "retro", "english", "book"])
+      .default("general"),
     draft: z.boolean().default(false),
   }),
 });

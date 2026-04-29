@@ -22,8 +22,15 @@ export function getRetroSlug(id: string) {
     : contentPath;
 }
 
+export function isPostCategory(
+  post: CollectionEntry<"blog">,
+  category: CollectionEntry<"blog">["data"]["category"],
+) {
+  return post.data.category === category;
+}
+
 export function getPostPermalink(post: CollectionEntry<"blog">) {
-  return post.data.retro
+  return post.data.category === "retro"
     ? `/retro/${getRetroSlug(post.id)}/`
     : `/blog/${getBlogSlug(post.id)}/`;
 }

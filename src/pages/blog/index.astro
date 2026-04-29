@@ -2,17 +2,11 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import dayjs from "dayjs";
-import { getBlogSlug } from "../../utils/content";
+import { getBlogSlug, isPostCategory } from "../../utils/content";
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const posts = (await getCollection("blog"))
-  .filter(
-    (post) =>
-      !post.data.ai &&
-      !post.data.study &&
-      !post.data.retro &&
-      !post.data.draft,
-  )
+  .filter((post) => isPostCategory(post, "general") && !post.data.draft)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
@@ -37,6 +31,18 @@ const posts = (await getCollection("blog"))
       class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
     >
       Study
+    </a>
+    <a
+      href={`${base}blog/english/`}
+      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
+    >
+      English
+    </a>
+    <a
+      href={`${base}blog/book/`}
+      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
+    >
+      Book
     </a>
   </div>
 

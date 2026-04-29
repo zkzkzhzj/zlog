@@ -1,0 +1,183 @@
+[
+  {
+    "sentence": "I'm not used to speaking up in meetings.",
+    "meaning": "회의에서 먼저 나서서 말하는 데 익숙하지 않다.",
+    "level": 580,
+    "expressions": ["be used to ~ing", "speak up"],
+    "grammarPoints": ["be used to + gerund"],
+    "why": "익숙함을 말할 때 `be used to ~ing`를 자연스럽게 쓰는 패턴이다.",
+    "paraphrase": "I don't feel comfortable speaking first in meetings.",
+    "similarIdeas": [
+      "I'm not used to asking questions in front of a large group.",
+      "She's getting used to working with a new team.",
+      "It took me a while to get used to the new schedule."
+    ]
+  },
+  {
+    "sentence": "I should have told you earlier.",
+    "meaning": "내가 너한테 더 일찍 말했어야 했어.",
+    "level": 620,
+    "expressions": ["should have p.p.", "earlier"],
+    "grammarPoints": ["modal perfect"],
+    "why": "과거 행동에 대한 아쉬움이나 후회를 말할 때 자주 쓰는 구조다.",
+    "paraphrase": "I regret not telling you sooner.",
+    "similarIdeas": [
+      "I should have asked for help sooner.",
+      "We should have checked the details more carefully.",
+      "He should have called before showing up."
+    ]
+  },
+  {
+    "sentence": "It turns out that the process is more complicated than it looks.",
+    "meaning": "막상 보니 그 과정은 겉보기보다 더 복잡하다.",
+    "level": 660,
+    "expressions": ["it turns out that", "more complicated than it looks"],
+    "grammarPoints": ["discourse framing", "comparative clause"],
+    "why": "처음 예상과 다른 결과를 자연스럽게 꺼낼 때 `It turns out that`를 많이 쓴다.",
+    "paraphrase": "In the end, the process was more complex than I expected.",
+    "similarIdeas": [
+      "It turns out that the fix was simpler than we thought.",
+      "The job is harder than it sounds.",
+      "This issue is more serious than it seems."
+    ],
+    "deepDive": {
+      "structure": [
+        "`It turns out`이 먼저 나오고, 실제 내용은 뒤의 `that`절이 맡는 구조다.",
+        "앞의 `it`은 내용을 채우는 진짜 주어라기보다 문장 머리를 가볍게 만드는 가주어처럼 보면 이해가 쉽다.",
+        "`more complicated than it looks`는 비교급 + 비교절 구조라서, 겉으로 보이는 인상과 실제 난도를 대비한다."
+      ],
+      "grammar": [
+        "`turns out`는 회화에서 자주 쓰는 결과 보고형 표현이다. 번역은 과거처럼 들려도 영어는 현재형으로 생생하게 전달하는 경우가 많다.",
+        "`than it looks`에서는 앞의 `the process`를 다시 반복하지 않고 `it`으로 받아 비교절을 매끈하게 만든다.",
+        "`complicated`처럼 음절이 긴 형용사는 `-er` 대신 `more`로 비교급을 만든다."
+      ],
+      "nuance": [
+        "`It turns out that ...`는 단순 정보 전달보다 '알고 보니'라는 발견의 뉘앙스가 강하다.",
+        "그래서 처음 예상이 빗나갔거나, 직접 해보고 나서 판단이 바뀐 상황에 특히 잘 맞는다.",
+        "`It seems that ...`보다 확정적이고, `Apparently ...`보다 직접 경험에서 나온 느낌이 강하다."
+      ],
+      "mistakes": [
+        "`turn out`을 `come out`과 섞어 쓰면 어색해지기 쉽다. 사실 발견에는 `turn out`이 더 자연스럽다.",
+        "`complicateder`처럼 비교급을 잘못 만드는 실수가 자주 나온다. 이 문장에서는 반드시 `more complicated`다.",
+        "표현만 외우고 비교 대상인 `than it looks`를 빼면 원문이 가진 '겉보기와 실제의 차이'가 약해진다."
+      ],
+      "comparisons": [
+        "`It turns out that he was right.`처럼 사실 확인 쪽으로도 쉽게 확장된다.",
+        "`The process is harder than it sounds.`처럼 비교절만 남겨 더 짧게 말할 수도 있다.",
+        "`As it turns out, ...`로 바꾸면 조금 더 회고적으로 들린다."
+      ]
+    }
+  },
+  {
+    "sentence": "Even though I knew the answer, I had trouble explaining it clearly.",
+    "meaning": "답은 알고 있었지만 그걸 명확하게 설명하는 데 어려움이 있었다.",
+    "level": 670,
+    "expressions": ["even though", "have trouble ~ing", "clearly"],
+    "grammarPoints": ["concession clause", "have trouble + gerund"],
+    "why": "알고 있는 것과 설명할 수 있는 것은 다르다는 맥락을 말하기 좋다.",
+    "paraphrase": "I knew the answer, but I couldn't explain it well.",
+    "similarIdeas": [
+      "Even though she agreed, she still looked unconvinced.",
+      "I had trouble following the discussion.",
+      "He knows the concept but struggles to apply it."
+    ]
+  },
+  {
+    "sentence": "I would rather focus on what we can improve right now.",
+    "meaning": "나는 지금 당장 우리가 개선할 수 있는 것에 집중하고 싶다.",
+    "level": 690,
+    "expressions": ["would rather", "focus on", "right now"],
+    "grammarPoints": ["would rather", "embedded clause"],
+    "why": "선호를 부드럽게 말하면서 방향을 제시할 때 유용하다.",
+    "paraphrase": "I'd prefer to focus on what we can fix immediately.",
+    "similarIdeas": [
+      "I'd rather wait until we have more data.",
+      "We should focus on what matters most.",
+      "Right now, the priority is stability."
+    ]
+  },
+  {
+    "sentence": "The reason I brought this up is that we're running out of time.",
+    "meaning": "내가 이 얘기를 꺼낸 이유는 우리가 시간이 부족해지고 있기 때문이다.",
+    "level": 710,
+    "expressions": ["the reason ... is that", "bring up", "run out of time"],
+    "grammarPoints": ["reason clause", "present progressive for ongoing situation"],
+    "why": "이유를 또렷하게 구조화해서 말하는 연습에 좋다.",
+    "paraphrase": "I'm mentioning this because we're starting to run short on time.",
+    "similarIdeas": [
+      "The reason I asked is that I was confused.",
+      "We're running out of options.",
+      "I didn't mean to bring that up so suddenly."
+    ]
+  },
+  {
+    "sentence": "We ended up missing the deadline because we underestimated the scope.",
+    "meaning": "우리는 범위를 과소평가해서 결국 마감일을 놓쳤다.",
+    "level": 730,
+    "expressions": ["end up ~ing", "miss the deadline", "underestimate the scope"],
+    "grammarPoints": ["result expression", "cause clause"],
+    "why": "원인과 결과를 한 문장으로 묶어 말하기 좋다.",
+    "paraphrase": "In the end, we missed the deadline because we didn't realize how big the scope was.",
+    "similarIdeas": [
+      "We ended up changing the plan halfway through.",
+      "They underestimated the amount of work involved.",
+      "Missing the deadline affected the whole schedule."
+    ]
+  },
+  {
+    "sentence": "What matters most is whether you can explain the idea in simple terms.",
+    "meaning": "가장 중요한 것은 그 아이디어를 쉬운 말로 설명할 수 있는지 여부다.",
+    "level": 740,
+    "expressions": ["what matters most", "in simple terms", "whether"],
+    "grammarPoints": ["what-clause", "whether clause"],
+    "why": "핵심 기준을 제시하면서 명확한 평가 관점을 세울 수 있다.",
+    "paraphrase": "The key point is whether you can make the idea easy to understand.",
+    "similarIdeas": [
+      "What matters is how consistently you practice.",
+      "Can you explain it in plain English?",
+      "Whether we agree now is less important than whether we understand the problem."
+    ]
+  },
+  {
+    "sentence": "I'm trying to figure out why this approach feels right in theory but fails in practice.",
+    "meaning": "이 접근이 이론상으로는 맞아 보이는데 실제로는 왜 실패하는지 파악하려고 한다.",
+    "level": 760,
+    "expressions": ["figure out", "in theory", "in practice"],
+    "grammarPoints": ["why-clause", "contrast structure"],
+    "why": "개념과 현실의 차이를 설명할 때 자주 쓰는 사고 표현이다.",
+    "paraphrase": "I'm trying to understand why this idea sounds right but doesn't work in real life.",
+    "similarIdeas": [
+      "It sounds good in theory, but it's hard to execute.",
+      "We're still figuring out the root cause.",
+      "In practice, the trade-off is more painful than expected."
+    ]
+  },
+  {
+    "sentence": "Not until I checked the numbers did I realize how much we were spending.",
+    "meaning": "수치를 확인하고 나서야 우리가 얼마나 많이 쓰고 있는지 깨달았다.",
+    "level": 820,
+    "expressions": ["not until", "check the numbers", "realize how much"],
+    "grammarPoints": ["inversion after negative expression"],
+    "why": "강조를 위해 도치가 들어간 고급 패턴이라 학습 가치가 높다.",
+    "paraphrase": "I didn't realize how much we were spending until I checked the numbers.",
+    "similarIdeas": [
+      "Not until later did I understand what he meant.",
+      "We should check the numbers before making a decision.",
+      "I didn't realize how expensive it had become."
+    ]
+  },
+  {
+    "sentence": "Had I known about the issue earlier, I would have prepared a backup plan.",
+    "meaning": "그 문제를 더 일찍 알았더라면 대안을 준비했을 텐데.",
+    "level": 860,
+    "expressions": ["Had I known", "backup plan", "would have p.p."],
+    "grammarPoints": ["inverted conditional", "third conditional"],
+    "why": "가정법 과거완료를 도치 형태로 쓰는 고급 문장이다.",
+    "paraphrase": "If I had known about the issue earlier, I would have prepared a backup plan.",
+    "similarIdeas": [
+      "Had we acted sooner, we could have avoided the delay.",
+      "A backup plan would have saved us time.",
+      "If she had known the risk, she might have chosen differently."
+    ]
+  }
+]

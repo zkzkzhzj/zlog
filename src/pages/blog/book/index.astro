@@ -6,11 +6,11 @@ import { getBlogSlug, isPostCategory } from "../../../utils/content";
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const posts = (await getCollection("blog"))
-  .filter((post) => isPostCategory(post, "study") && !post.data.draft)
+  .filter((post) => isPostCategory(post, "book") && !post.data.draft)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
-<BaseLayout title="Study · zlog">
+<BaseLayout title="Book · zlog">
   <h1 class="mb-6 text-2xl font-semibold">Blog</h1>
 
   <div class="mb-8 flex gap-2 border-b border-gray-200">
@@ -28,7 +28,7 @@ const posts = (await getCollection("blog"))
     </a>
     <a
       href={`${base}blog/study/`}
-      class="border-b-2 border-gray-900 px-3 py-2 text-sm font-medium text-gray-900"
+      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
     >
       Study
     </a>
@@ -40,7 +40,7 @@ const posts = (await getCollection("blog"))
     </a>
     <a
       href={`${base}blog/book/`}
-      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
+      class="border-b-2 border-gray-900 px-3 py-2 text-sm font-medium text-gray-900"
     >
       Book
     </a>
@@ -74,7 +74,7 @@ const posts = (await getCollection("blog"))
       </ul>
     ) : (
       <p class="py-20 text-center text-sm text-gray-400">
-        No study notes yet.
+        No book posts yet.
       </p>
     )
   }

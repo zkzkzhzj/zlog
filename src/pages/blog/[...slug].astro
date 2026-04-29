@@ -7,7 +7,7 @@ import { getBlogSlug } from "../../utils/content";
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   return posts
-    .filter((post) => !post.data.retro && !post.data.draft)
+    .filter((post) => post.data.category !== "retro" && !post.data.draft)
     .map((post) => ({
       params: { slug: getBlogSlug(post.id) },
       props: { post },
