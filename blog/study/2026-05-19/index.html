@@ -1,0 +1,286 @@
+<!DOCTYPE html><html lang="ko"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v6.1.5"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>2026-05-19 학습 노트 — CloudFront, OAC, CDN</title><meta name="description" content="정적 파일의 관리"><link rel="canonical" href="https://zlog.page/blog/study/2026-05-19/"><!-- OG --><meta property="og:type" content="website"><meta property="og:url" content="https://zlog.page/blog/study/2026-05-19/"><meta property="og:title" content="2026-05-19 학습 노트 — CloudFront, OAC, CDN"><meta property="og:description" content="정적 파일의 관리"><!-- Search Console --><meta name="google-site-verification" content="QL5oG6ROeQ_efrAdk4Xk9ZLbSRYdxWNyzD2FT7BFrmU"><meta name="naver-site-verification" content="d38c673504a43b7081a895abd046ec7cfaba76c4"><!-- Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-HJR3WF26N4"></script><script type="module">window.dataLayer=window.dataLayer||[];function a(){dataLayer.push(arguments)}a("js",new Date);a("config","G-HJR3WF26N4");</script><!-- Sitemap --><link rel="sitemap" href="/sitemap-index.xml"><!-- RSS --><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml"><link rel="stylesheet" href="/_astro/BaseLayout.BnMqiMs0.css">
+<style>.toc-aside[data-astro-cid-2q5oecfc]{display:none}@media(min-width:1280px){.toc-aside[data-astro-cid-2q5oecfc]{display:block;position:fixed;top:5rem;left:calc(50% + 26rem);width:14rem}}
+</style></head> <body class="flex min-h-screen flex-col bg-white text-gray-900"> <header class="border-b border-gray-100"> <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5"> <a href="/" class="text-lg font-semibold tracking-tight">zlog</a> <div class="flex gap-6 text-sm text-gray-500"> <a href="/blog/" class="transition hover:text-gray-900">Blog</a> <a href="/retro/" class="transition hover:text-gray-900">Retro</a> <a href="/lab/" class="transition hover:text-gray-900">Lab</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div class="relative" data-astro-cid-2q5oecfc> <article data-astro-cid-2q5oecfc> <header class="mb-10" data-astro-cid-2q5oecfc> <h1 class="mb-1 text-2xl font-semibold" data-astro-cid-2q5oecfc>2026-05-19 학습 노트 — CloudFront, OAC, CDN</h1> <p class="mb-3 text-sm text-gray-400" data-astro-cid-2q5oecfc>정적 파일의 관리</p> <div class="flex gap-3 text-xs text-gray-400" data-astro-cid-2q5oecfc> <time datetime="2026-05-19T00:00:00.000Z" data-astro-cid-2q5oecfc> 2026. 05. 19 </time> <span data-astro-cid-2q5oecfc>&middot;</span> <span data-astro-cid-2q5oecfc>16 min read</span> </div> <div class="mt-3 flex flex-wrap gap-2" data-astro-cid-2q5oecfc> <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> study </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> AWS </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> CloudFront </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> CDN </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> 보안 </span> </div> </header> <div class="prose-custom" data-astro-cid-2q5oecfc>  <h1 id="정적-mp3-하나-호스팅하는데-왜-이렇게-길게-고민했나">정적 mp3 하나 호스팅하는데 왜 이렇게 길게 고민했나</h1>
+<p>ghworld 에 환경음 mp3 를 붙이는 단계에서, “이 파일 어디에 두지” 하나로 한참을 고민했다</p>
+<p>처음에는 “그냥 S3 에 올리고 public 으로 풀면 끝 아닌가” 싶었다<br/>
+근데 막상 결정을 하려고 하니 찝찝함이 남았다</p>
+<blockquote>
+<p>S3 URL 을 그대로 프론트엔드에 박는 게 정말 괜찮은가?<br/>
+누가 막 호출하면 비용은 어떻게 되나?<br/>
+한국 밖에서 접속하면 느리지 않나?<br/>
+CloudFront 를 끼면 뭐가 바뀌나? OAC 는 또 뭐고?</p>
+</blockquote>
+<p>질문이 끝없이 나왔다<br/>
+이번에는 그 질문에 답을 찾아가며 정리한 기록이다</p>
+<div class="separator">···</div>
+<h2 id="출발점--운영-환경-환경음이-무음이었다">출발점 — 운영 환경 환경음이 무음이었다</h2>
+<p>처음 발견한 건 사소한 증상이었다<br/>
+로컬에서는 환경음이 잘 들리는데 운영 환경에서는 무음이었다</p>
+<p>원인은 단순했다<br/>
+mp3 파일이 <code>.gitignore</code>에 걸려 git 에서 추적되지 않았고, Docker 이미지에도 포함되지 않았던 것</p>
+<p>해결을 위해서는 두 가지 방법이 있었다</p>
+<ol>
+<li>mp3 를 git 에 포함시켜 이미지 빌드에 포함시킨다</li>
+<li>정적 파일 호스팅을 별도 인프라(S3 / CDN) 로 분리한다</li>
+</ol>
+<p>정적 파일이 적다면 1 번도 나쁘지 않다<br/>
+근데 정적 파일은 환경음뿐 아니라 캐릭터, 아이템 등의 에셋 파일도 필요해질 예정이다<br/>
+”정적 파일은 정적 파일 인프라에 둔다” 라는 선을 지금 그어두는 게 맞다고 판단했다</p>
+<p>그래서 자연스럽게 다음 질문으로 넘어갔다<br/>
+<strong>”정적 파일을 어떻게 관리해야할까?“</strong></p>
+<h2 id="1-차-후보--s3-만-public-으로-노출">1 차 후보 — S3 만 public 으로 노출</h2>
+<p>가장 빠른 방법이다<br/>
+S3 버킷을 public read 로 풀고, 프론트엔드에서 <code>https://***.amazonaws.com/sounds/village-night.mp3</code> 같은 URL 을 직접 호출한다</p>
+<p>장점은 명확하다</p>
+<ul>
+<li>설정이 단순하다</li>
+<li>추가 비용 없음</li>
+</ul>
+<p>근데 단점이 있었다</p>
+<h3 id="단점-1-한국-밖-사용자에게-느리다">단점 1. 한국 밖 사용자에게 느리다</h3>
+<p>S3 버킷은 하나의 리전에 존재한다 (<code>ap-northeast-2</code> 서울)<br/>
+일본, 미국에서 접속하면 매번 서울까지 패킷이 다녀와야 한다<br/>
+정적 파일이 로드하는데 오래 걸리면 사용자 사용성이 많이 나빠진다</p>
+<h3 id="단점-2-origin-부하-직격">단점 2. origin 부하 직격</h3>
+<p>매 요청이 S3 에 그대로 닿는다<br/>
+유저 1 만 명이 마을에 들어와서 환경음을 동시에 받으면, S3 가 1 만 번 동일한 mp3 를 내보낸다<br/>
+캐싱이 되지 않는 구조다</p>
+<h3 id="단점-3-비용-폭주-위험--제일-심각한-문제이다">단점 3. 비용 폭주 위험 — 제일 심각한 문제이다</h3>
+<p>S3 egress 가 한국 리전 기준 대략 <code>$0.126/GB</code>다<br/>
+누가 악의적으로 mp3 URL 을 <code>curl</code> 루프로 박으면 (또는 그냥 봇이 긁어가면) 비용이 걷잡을 수 없이 커진다</p>
+<p>“public 정적 파일이라 어차피 공개인데?”라고 넘기기엔 문제가 있었다<br/>
+S3 는 “이 IP 가 좀 많이 가져가니까 잠깐 막을게” 같은 게 없다<br/>
+오는 요청은 다 받고, 다 청구한다</p>
+<h2 id="2-차-후보--cloudfront-를-앞단에-끼우기">2 차 후보 — CloudFront 를 앞단에 끼우기</h2>
+<p>여기서 CDN 이 왜 정적 파일 배포의 자연스러운 선택지처럼 여겨지는지 어느 정도 와닿았다</p>
+<h3 id="cdn--정적-파일을-전-세계-edge-에-흩뿌린다">CDN — 정적 파일을 전 세계 edge 에 흩뿌린다</h3>
+<p>CloudFront 는 전 세계 edge location 에 정적 파일 사본을 둔다<br/>
+사용자가 정적 파일을 요청하면, 가장 가까운 edge 가 응답한다</p>
+<p>흐름은 이렇다</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>[ 사용자 ] → [ 가까운 edge ] ──(캐시 HIT)──&gt; 200 응답 (origin 안 거침)</span></span>
+<span class="line"><span>                          │</span></span>
+<span class="line"><span>                          └─(캐시 MISS)──&gt; [ S3 origin ] → edge 캐시에 저장 → 200 응답</span></span></code></pre>
+<p>첫 호출만 origin (S3) 까지 다녀오고, 이후로는 edge 에서 끝난다<br/>
+캐시 TTL 을 24 시간으로 잡으면, 그 24 시간 동안 같은 edge 에서 발생하는 요청은 S3 를 거치지 않는다</p>
+<p><strong>결과적으로 origin 부하가 99.99% 가까이 줄어든다</strong><br/>
+edge 캐시 hit 비율이 높을수록 egress 비용이 낮아진다<br/>
+CloudFront 응답 헤더에 <code>X-Cache: Hit from cloudfront</code> / <code>Miss from cloudfront</code>가 박힌다</p>
+<h3 id="캐시는-무조건-좋은가--ttl-트레이드오프">캐시는 무조건 좋은가 — TTL 트레이드오프</h3>
+<p>CloudFront 의 <code>CachingOptimized</code> managed policy 를 쓰면 기본 TTL 이 하루다<br/>
+mp3 같이 잘 안 바뀌는 정적 파일은 적절하다고 판단했다</p>
+<p>근데 정적 파일명을 그대로 두고 내용만 갈아끼우면 24 시간 동안 edge 에는 옛날 mp3 가 남아있다<br/>
+<strong>정적 파일을 수정할 때는 파일명을 바꾸거나 (<code>village-night-v2.mp3</code>), CloudFront invalidation 을 호출해야 한다</strong></p>
+<p>이걸 모르면 “왜 새 파일이 안 보이지?” 로 한참 헤맬 수 있다</p>
+<h2 id="3-차--oac-까지-더하면-뭐가-달라지나">3 차 — OAC 까지 더하면 뭐가 달라지나</h2>
+<p>여기까지만 봐도 CloudFront 의 가치는 충분해 보였는데<br/>
+GPT 와 Gemini 한테 같이 검토를 시켜보니 Gemini 가 이런 말을 했다</p>
+<blockquote>
+<p>S3 를 public 으로 두면 무단 데이터 접근 위험이 있습니다<br/>
+OAC(Origin Access Control) 로 막아야 합니다</p>
+</blockquote>
+<p>처음엔 “음 그렇겠지” 했는데, 다시 보니까 우리 컨텍스트에서는 좀 어긋난 말이었다<br/>
+<strong>우리 정적 파일은 어차피 public 으로 모두에게 노출하려고 하는 파일이다</strong><br/>
+”무단 접근” 이라는 표현이 우리 케이스에는 안 맞는다</p>
+<p>그럼 OAC 는 왜 끼우나?</p>
+<h3 id="oac-가-실제로-하는-일">OAC 가 실제로 하는 일</h3>
+<p>OAC 는 CloudFront 가 S3 origin 을 호출할 때 AWS SigV4 서명을 붙여준다<br/>
+S3 Bucket Policy 는 “이 서명이 우리 CloudFront 에서 온 게 맞는지” 확인되면 통과시킨다</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="json"><code><span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#79B8FF">  &quot;Version&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;2012-10-17&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  &quot;Statement&quot;</span><span style="color:#E1E4E8">: [{</span></span>
+<span class="line"><span style="color:#79B8FF">    &quot;Effect&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;Allow&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    &quot;Principal&quot;</span><span style="color:#E1E4E8">: { </span><span style="color:#79B8FF">&quot;Service&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;cloudfront.amazonaws.com&quot;</span><span style="color:#E1E4E8"> },</span></span>
+<span class="line"><span style="color:#79B8FF">    &quot;Action&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;s3:GetObject&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    &quot;Resource&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;arn:aws:s3:::***/*&quot;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    &quot;Condition&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">      &quot;StringEquals&quot;</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#79B8FF">        &quot;AWS:SourceArn&quot;</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;arn:aws:cloudfront::***:distribution/E***&quot;</span></span>
+<span class="line"><span style="color:#E1E4E8">      }</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }]</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>결과적으로</p>
+<ul>
+<li><code>https://***.cloudfront.net/sounds/village-night.mp3</code> ← 됨</li>
+<li><code>https://***.amazonaws.com/sounds/village-night.mp3</code> ← 403</li>
+</ul>
+<p>같은 mp3 가 같은 S3 에 있는데, 직접 S3 URL 로는 못 가져온다</p>
+<h3 id="그래서">그래서?</h3>
+<p><strong>“URL 이 노출된다 = 접근할 수 있다” 가 아니다</strong></p>
+<p>S3 URL 이 어딘가에 새어나가도, 그 URL 로는 401/403 만 응답한다<br/>
+누가 강제로 origin 부하를 일으키려고 해도 진입점이 CloudFront 하나로 좁혀진다</p>
+<p><code>public_assets</code>이라도 진입점을 좁혀두면 정책 적용이 쉽다</p>
+<ul>
+<li>WAF 룰을 CloudFront 에만 붙이면 끝</li>
+<li>캐시 정책도 CloudFront 만 보면 끝</li>
+<li>비용 alert 도 CloudFront 메트릭 하나만 보면 끝</li>
+</ul>
+<p>“우회로가 없다” 는 게 별 거 아닌 것 같아도 운영에 들어가면 차이가 크다</p>
+<h2 id="그래서-ddos-도-막아주나">그래서 DDoS 도 막아주나?</h2>
+<p>여기서 한 가지 헷갈리기 쉬운 부분이 있다</p>
+<p>CloudFront 는 DDoS 를 완전히 차단해주지 않는다<br/>
+<strong>AWS Shield Standard</strong> 가 막는 건 Layer 3-4 공격이다<br/>
+SYN flood, UDP reflection 같은 류</p>
+<ul>
+<li>Layer 3-4 (네트워크 / 전송 계층) — Shield Standard 무료로 어느 정도 커버</li>
+<li>Layer 7 (HTTP flood, 봇이 정상 형태로 무한 요청) — <strong>Shield Standard 로는 못 막는다</strong>
+<ul>
+<li>WAF rate-limit 룰을 별도로 붙이거나</li>
+<li>Shield Advanced ($3,000/월~) 를 결합해야 한다</li>
+</ul>
+</li>
+</ul>
+<p>다만 Layer 7 공격이 와도 CloudFront 의 트래픽 분산 자체가 origin 보호에 효과가 있다<br/>
+edge 가 1 차 흡수해주는 구조라 origin 까지 다 도달하지는 않는다</p>
+<p>CloudFront 만으로는 “원천 차단” 까진 아니지만, <strong>무방비 S3 보다는 압도적으로 낫다</strong> 정도이다</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">위협</th><th style="text-align:left">S3 만</th><th style="text-align:left">CloudFront + OAC</th></tr></thead><tbody><tr><td style="text-align:left">일반 트래픽 (정상 사용자)</td><td style="text-align:left">매번 S3 부하</td><td style="text-align:left">edge 캐시 흡수</td></tr><tr><td style="text-align:left">Layer 3-4 DDoS (SYN flood 등)</td><td style="text-align:left">무방비</td><td style="text-align:left">Shield Standard 1 차 차단</td></tr><tr><td style="text-align:left">Layer 7 DDoS (HTTP flood)</td><td style="text-align:left">무방비 + 비용 폭주</td><td style="text-align:left">edge 분산</td></tr><tr><td style="text-align:left">비용 통제</td><td style="text-align:left">어렵다 (egress 직접)</td><td style="text-align:left">Budget alert + WAF rate-limit 으로 가드</td></tr><tr><td style="text-align:left">URL 노출 시 직접 origin 접근</td><td style="text-align:left">가능</td><td style="text-align:left">차단 (403)</td></tr></tbody></table>
+<h2 id="한국-사용자-latency-는-정말-빨라지나">한국 사용자 latency 는 정말 빨라지나?</h2>
+<p>“CDN 을 중간에 끼우면 다 빨라진다” 라고 단순하게 외우고 있었는데, 실제로는 한 가지 의외의 포인트가 있다</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style="text-align:left">케이스</th><th style="text-align:left">대략 latency</th></tr></thead><tbody><tr><td style="text-align:left">S3 직접 호출</td><td style="text-align:left">30~50ms</td></tr><tr><td style="text-align:left">CloudFront 첫 호출 (cache MISS)</td><td style="text-align:left">40~60ms</td></tr><tr><td style="text-align:left">CloudFront 2 번째 이후 (cache HIT)</td><td style="text-align:left">5~15ms</td></tr></tbody></table>
+<p>cache MISS 일 때는 <strong>S3 직접 호출보다 살짝 더 느릴 수 있다</strong><br/>
+edge → S3 한 단계가 더 끼기 때문이다</p>
+<p>근데 한 번 캐시 처리가 되면 그 다음부터는 빠르다</p>
+<h2 id="gemini-의-일반론을-그대로-받지-않은-이유">Gemini 의 일반론을 그대로 받지 않은 이유</h2>
+<p>이번에 한 번 더 느꼈는데, AI 가 주는 보안 권고는 “일반적으로 맞는 말” 이긴 한데 <strong>내 컨텍스트가 그 일반론에 해당하는지</strong> 는 내가 판단해야 한다</p>
+<p>Gemini 의 “무단 데이터 접근 위험” 은</p>
+<ul>
+<li>사내 문서, 개인정보, 결제 정보 같은 비공개 정적 파일을 다룰 때는 맞는 말이다</li>
+<li>근데 우리는 <strong>모두에게 들려주려고 만든 환경음 mp3</strong> 다</li>
+<li>우리 컨텍스트의 진짜 위협은 “무단 접근” 이 아니라 “비용 폭주” 다</li>
+</ul>
+<p>같은 “S3 를 CloudFront 뒤로 숨기자” 라는 결론이라도, <strong>왜 숨기는가</strong> 의 답이 다르다</p>
+<ul>
+<li>Gemini - 파일이 새는 걸 막기 위해</li>
+<li>우리 케이스 - 정적 파일은 어차피 공개지만, <strong>진입점을 좁혀 비용·운영 통제권을 확보하기 위해</strong></li>
+</ul>
+<p>AI 의 권고를 그대로 박아넣기보다 “우리한테 그 권고가 왜 유효한가” 를 한 번 더 따져보는 습관이 필요하다</p>
+<h2 id="마이그레이션-절차">마이그레이션 절차</h2>
+<p>S3 만 쓰던 상태에서 CloudFront + OAC 로 옮길 때, 순서가 꼬이면 갑자기 정적 파일이 안 보이는 사고가 난다<br/>
+순서는 이렇다</p>
+<ol>
+<li><strong>CloudFront distribution 을 먼저 생성한다</strong>
+<ul>
+<li>origin = S3 버킷</li>
+<li>이 시점에는 Bucket Policy 를 public 그대로 둔다</li>
+</ul>
+</li>
+<li><strong>프론트엔드 코드의 정적 파일 base URL 을 CloudFront 도메인으로 교체한다</strong>
+<ul>
+<li>예: <code>NEXT_PUBLIC_ASSETS_BASE_URL</code> 환경변수</li>
+</ul>
+</li>
+<li><strong>운영 배포 후, 모든 정적 파일이 CloudFront 경유로 잘 뜨는지 확인한다</strong>
+<ul>
+<li><code>X-Cache: Hit from cloudfront</code> 헤더 확인</li>
+</ul>
+</li>
+<li><strong>마지막에</strong> Bucket Policy 를 OAC 전용으로 교체한다
+<ul>
+<li>이 시점부터 S3 URL 직접 호출은 403 이 된다</li>
+</ul>
+</li>
+</ol>
+<p>3 번을 건너뛰고 4 번을 먼저 하면, 만약 코드가 어딘가에서 아직 S3 URL 을 직접 부르고 있을 때 그 부분이 깨진다</p>
+<h2 id="이번-선택">이번 선택</h2>
+<ul>
+<li>정적 파일은 S3 에 둔다</li>
+<li>앞단에 CloudFront 를 끼운다 (캐시 + 진입점 단일화)</li>
+<li>OAC 로 S3 직접 접근을 막는다</li>
+</ul>
+<p>mp3 파일을 어떻게 관리할 지 생각하다가, “정적 파일 인프라” 자체를 어떻게 관리할 지 고민할 수 있었다<br/>
+앞으로 에셋들은 S3 에서 관리할 것이다</p>
+<h2 id="그런데-cloudfront-가-늘-정답은-아니다">그런데 CloudFront 가 늘 정답은 아니다</h2>
+<p>이번 프로젝트는</p>
+<ul>
+<li>이유는 모르겠지만 CloudFlare 집계에서 해외 접속이 집계되었고(봇일 가능성이 높긴 하다)</li>
+<li>정적 파일 수가 점점 늘어날 예정이며</li>
+<li>비용 통제권을 일찍 확보하고 싶었다</li>
+</ul>
+<p>위 조건이라 CloudFront 가 답이 되었다</p>
+<p>만약</p>
+<ul>
+<li>정적 파일이 2~3 개로 끝나고 추가될 일이 없고</li>
+<li>모든 사용자가 한 리전 안에서만 쓰고</li>
+<li>트래픽 자체가 무시할 만한 규모면</li>
+</ul>
+<p>S3 만 public 으로 노출하는 게 더 단순한 선택일 수 있다<br/>
+운영 비용 (CloudFront 도메인, 인증서, invalidation 관리) 이 정적 파일 규모를 넘어선다</p>
+<p>“CDN 은 무조건 좋다” 가 아니라 <strong>“CDN 을 활용할 때”</strong> 를 보는 시야가 필요하다</p>
+<h2 id="다음에-더-볼-것">다음에 더 볼 것</h2>
+<ul>
+<li><strong>CloudFront signed URL / signed cookie</strong></li>
+<li><strong>Cache-Control 헤더와 CloudFront 캐시 정책의 우선순위</strong></li>
+<li><strong>Lambda@Edge / CloudFront Functions</strong></li>
+<li><strong>AWS WAF rate-limit 룰</strong></li>
+<li><strong>HTTP/3 (QUIC)</strong></li>
+<li><strong>Cloudflare 와의 비교</strong></li>
+</ul>
+<h1 id="종합-회고">종합 회고</h1>
+<p>처음에는 “mp3 하나 어디 둘지” 의 고민이었는데, 한 번 파보니 CDN 의 본질 — 캐시, edge 분산, 진입점 단일화, 비용 통제 — 까지 줄줄이 연결됐다</p>
+<p>그리고 한 가지 큰 교훈</p>
+<blockquote>
+<p>AI 가 주는 보안 권고를 그대로 받지 말고<br/>
+”우리 컨텍스트에서 그 권고가 왜 유효한가” 를 한 번 더 묻자</p>
+</blockquote>
+<p>“S3 를 CloudFront 뒤로 숨기자” 라는 같은 결론이지만, <strong>우리한테 진짜 위협은 무단 접근이 아니라 비용 폭주였다</strong><br/>
+이 차이를 알고 결정하는 것과 모르고 결정하는 것은 다르다고 생각한다</p>  </div> <section class="mt-16 border-t border-gray-100 pt-10"> <script src="https://giscus.app/client.js" data-repo="zkzkzhzj/zlog" data-repo-id="R_kgDOR9wd0Q" data-category="General" data-category-id="DIC_kwDOR9wd0c4C6cB0" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="light" data-lang="ko" crossorigin="anonymous" async></script> </section> </article> <aside class="toc-aside" data-astro-cid-2q5oecfc> <nav class="sticky top-8" data-astro-cid-2q5oecfc> <p class="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase" data-astro-cid-2q5oecfc>
+목차
+</p> <ul class="space-y-1.5 text-[13px]" data-astro-cid-2q5oecfc> <li style="padding-left: -12px" data-astro-cid-2q5oecfc> <a href="#정적-mp3-하나-호스팅하는데-왜-이렇게-길게-고민했나" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 정적 mp3 하나 호스팅하는데 왜 이렇게 길게 고민했나 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#출발점--운영-환경-환경음이-무음이었다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 출발점 — 운영 환경 환경음이 무음이었다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#1-차-후보--s3-만-public-으로-노출" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 1 차 후보 — S3 만 public 으로 노출 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#단점-1-한국-밖-사용자에게-느리다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 단점 1. 한국 밖 사용자에게 느리다 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#단점-2-origin-부하-직격" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 단점 2. origin 부하 직격 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#단점-3-비용-폭주-위험--제일-심각한-문제이다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 단점 3. 비용 폭주 위험 — 제일 심각한 문제이다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#2-차-후보--cloudfront-를-앞단에-끼우기" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 2 차 후보 — CloudFront 를 앞단에 끼우기 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#cdn--정적-파일을-전-세계-edge-에-흩뿌린다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> CDN — 정적 파일을 전 세계 edge 에 흩뿌린다 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#캐시는-무조건-좋은가--ttl-트레이드오프" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 캐시는 무조건 좋은가 — TTL 트레이드오프 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#3-차--oac-까지-더하면-뭐가-달라지나" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 3 차 — OAC 까지 더하면 뭐가 달라지나 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#oac-가-실제로-하는-일" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> OAC 가 실제로 하는 일 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#그래서" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 그래서? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#그래서-ddos-도-막아주나" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 그래서 DDoS 도 막아주나? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#한국-사용자-latency-는-정말-빨라지나" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 한국 사용자 latency 는 정말 빨라지나? </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#gemini-의-일반론을-그대로-받지-않은-이유" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> Gemini 의 일반론을 그대로 받지 않은 이유 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#마이그레이션-절차" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 마이그레이션 절차 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#이번-선택" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 이번 선택 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#그런데-cloudfront-가-늘-정답은-아니다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 그런데 CloudFront 가 늘 정답은 아니다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#다음에-더-볼-것" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 다음에 더 볼 것 </a> </li><li style="padding-left: -12px" data-astro-cid-2q5oecfc> <a href="#종합-회고" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 종합 회고 </a> </li> </ul> </nav> </aside> </div>  </main> <footer class="mt-auto border-t border-gray-100 py-6 text-center text-xs text-gray-400">
+&copy; 2026 zlog
+</footer></body></html>
