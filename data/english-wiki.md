@@ -20,20 +20,15 @@ This wiki tracks recent English-study posts so the generator can manage difficul
 
 ## Recent Posts
 
-- `2026-04-30` | level: `660` | sentence: `It turns out that the process is more complicated than it looks.` | expressions: `it turns out that; more complicated than it looks` | grammar: `discourse framing; comparative clause`
 - `2026-04-29` | level: `620` | sentence: `I should have told you earlier.` | expressions: `should have p.p.; earlier` | grammar: `modal perfect`
 
 ## Recent Expressions
 
-- `it turns out that`
-- `more complicated than it looks`
 - `should have p.p.`
 - `earlier`
 
 ## Recent Grammar Points
 
-- `discourse framing`
-- `comparative clause`
 - `modal perfect`
 
 ## Candidate Next Areas
