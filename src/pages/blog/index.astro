@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import BlogCategoryTabs from "../../components/BlogCategoryTabs.astro";
+import NewBadge from "../../components/NewBadge.astro";
 import { getCollection } from "astro:content";
 import dayjs from "dayjs";
 import { getBlogSlug, isPostCategory } from "../../utils/content";
@@ -13,38 +15,7 @@ const posts = (await getCollection("blog"))
 <BaseLayout title="Blog · zlog">
   <h1 class="mb-6 text-2xl font-semibold">Blog</h1>
 
-  <div class="mb-8 flex gap-2 border-b border-gray-200">
-    <a
-      href={`${base}blog/`}
-      class="border-b-2 border-gray-900 px-3 py-2 text-sm font-medium text-gray-900"
-    >
-      General
-    </a>
-    <a
-      href={`${base}blog/ai/`}
-      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
-    >
-      AI
-    </a>
-    <a
-      href={`${base}blog/study/`}
-      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
-    >
-      Study
-    </a>
-    <a
-      href={`${base}blog/english/`}
-      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
-    >
-      English
-    </a>
-    <a
-      href={`${base}blog/book/`}
-      class="border-b-2 border-transparent px-3 py-2 text-sm text-gray-400 transition hover:text-gray-600"
-    >
-      Book
-    </a>
-  </div>
+  <BlogCategoryTabs active="general" />
 
   <ul class="flex flex-col gap-1">
     {
@@ -55,8 +26,11 @@ const posts = (await getCollection("blog"))
             class="group flex items-baseline justify-between gap-4 rounded-md px-3 py-3 transition hover:bg-gray-50"
           >
             <div>
-              <h2 class="text-[15px] text-gray-700 group-hover:text-gray-900">
-                {post.data.title}
+              <h2
+                class="flex items-center gap-1.5 text-[15px] text-gray-700 group-hover:text-gray-900"
+              >
+                <span>{post.data.title}</span>
+                <NewBadge pubDate={post.data.pubDate} />
               </h2>
               {post.data.description && (
                 <p class="mt-1 text-xs text-gray-400">

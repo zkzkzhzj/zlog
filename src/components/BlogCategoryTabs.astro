@@ -1,0 +1,66 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import NewBadge from "./NewBadge.astro";
+import { isPostCategory } from "../utils/content";
+
+type Category = Exclude<CollectionEntry<"blog">["data"]["category"], "retro">;
+
+const { active } = Astro.props as { active: Category };
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const categories: Array<{ id: Category; label: string; href: string }> = [
+  { id: "general", label: "General", href: `${base}blog/` },
+  { id: "ai", label: "AI", href: `${base}blog/ai/` },
+  { id: "study", label: "Study", href: `${base}blog/study/` },
+  { id: "english", label: "English", href: `${base}blog/english/` },
+  { id: "book", label: "Book", href: `${base}blog/book/` },
+];
+
+const allPosts = (await getCollection("blog")).filter((post) => !post.data.draft);
+
+function getLatestPubDate(category: Category) {
+  return allPosts
+    .filter((post) => isPostCategory(post, category))
+    .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())[0]?.data
+    .pubDate;
+}
+---
+
+<div class="mb-8 flex gap-2 border-b border-gray-200">
+  {
+    categories.map((category) => {
+      const isActive = category.id === active;
+      const latestPubDate = getLatestPubDate(category.id);
+
+      return (
+        <a
+          href={category.href}
+          class:list={[
+            "flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition",
+            isActive
+              ? "border-gray-900 font-medium text-gray-900"
+              : "border-transparent text-gray-400 hover:text-gray-600",
+          ]}
+        >
+          <span>{category.label}</span>
+          {latestPubDate && <NewBadge pubDate={latestPubDate} />}
+        </a>
+      );
+    })
+  }
+</div>
+
+<script>
+  const DAY_IN_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  document.querySelectorAll("[data-new-badge]").forEach((badge) => {
+    const pubDate = badge.getAttribute("data-pub-date");
+    if (!pubDate) return;
+
+    const elapsed = now - new Date(pubDate).getTime();
+    if (elapsed >= 0 && elapsed <= DAY_IN_MS) {
+      badge.classList.remove("hidden");
+      badge.classList.add("inline-grid");
+    }
+  });
+</script>
