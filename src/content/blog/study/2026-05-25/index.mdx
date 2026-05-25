@@ -1,0 +1,275 @@
+---
+title: "2026-05-25 학습 노트 — iOS 환경음 디버깅 삽질기"
+pubDate: 2026-05-25
+description: "데스크탑에서 들리던 환경음이 iPhone에서 안 되는 이유"
+tags: ["study", "iOS", "WebKit", "Web Audio", "CORS", "CloudFront", "Howler.js"]
+category: "study"
+draft: false
+---
+
+ghworld에 환경음을 넣었다
+
+바람 소리, 모닥불, 물소리, 새소리  
+4종의 환경음이 마을 곳곳에 깔려 있고, 캐릭터가 가까이 가면 소리가 커진다  
+슬라이더로 음량도 조절할 수 있다
+
+데스크탑에서는 잘 동작했다
+
+그런데 iPhone을 꺼내 들었더니 4가지 소리가 모두 동시에 들리고 소리조절도 안되더라  
+슬라이더를 움직여도, 위치를 옮겨도..  
+캐릭터가 모닥불 옆에 서든 마을 끝에 서든 4개 소리가 동시에 전부 들렸다
+
+여기서부터 삽질이 시작됐다
+
+:::
+
+## 함정 1 — iOS는 소리를 직접 조절하지 못하게 한다
+
+처음엔 코드 버그를 의심했다  
+`howl.volume(0.3)` 같은 호출이 실제로 잘 들어가는지 콘솔을 찍어봤다
+
+로직은 멀쩡했다  
+음량 계산 로직이 정상적으로 흘러가고 있었다  
+그런데 실제로 들리는 소리는 변하지 않았다
+
+한참 뒤에야 원인을 찾았다
+
+[**iOS WebKit에서는 오디오 변경을 막는다**](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/Using_HTML5_Audio_Video/Device-SpecificConsiderations/Device-SpecificConsiderations.html)
+
+이게 무슨 뜻이냐면
+
+```js
+const audio = new Audio('sound.mp3');
+audio.volume = 0.3;  // iOS에서는 무시된다. 항상 1.0
+```
+
+JavaScript로 음량을 바꾸려고 해도 iOS가 무시한다  
+Apple의 의도적인 정책이다
+
+Apple의 공식 문서에 이렇게 적혀 있다
+
+> "On iOS devices, the audio level is always under the user's physical control. The volume property is not settable in JavaScript."
+
+"음량은 하드웨어 버튼으로만 조절한다"가 Apple의 철학이다  
+광고나 악의적인 사이트가 갑자기 큰 소리를 내는 걸 막기 위한 정책이라고 한다
+
+문제는 이 프로젝트에서 쓰고 있던 오디오 라이브러리인 Howler.js가 `html5: true` 모드로 돌고 있었다는 거다  
+이 모드는 내부적으로 `<audio>` element를 쓴다  
+즉, iOS에서 volume API가 막히는 그 방식이었다
+
+다행히 Howler.js에는 다른 모드가 있다
+
+`html5: false`로 설정하면 Web Audio API를 쓴다  
+Web Audio는 `<audio>` element가 아니라 `AudioContext`라는 별도의 오디오 처리 그래프를 사용한다  
+여기서는 `GainNode`라는 노드로 신호를 직접 곱한다
+
+```js
+const ctx = new AudioContext();
+const gain = ctx.createGain();
+gain.gain.value = 0.3;  // iOS에서도 정상 동작
+```
+
+iOS의 제약은 `<audio>` element에만 적용된다  
+시스템 음량(하드웨어 버튼)은 여전히 못 건드리지만, 앱 안에서의 음량 조절은 자유롭다
+
+그럼 처음부터 `html5: false`로 했으면 되지 않았나?  
+이전에 `html5: true`로 박았던 이유가 있었다  
+mp3 파일 중 일부가 Web Audio의 `decodeAudioData()`에서 디코딩 실패를 일으켰기 때문이다  
+그때는 데스크탑에서만 테스트했으니 "html5 모드가 안전하다"고 판단한 거였다
+
+:::
+
+## 함정 2 — CORS가 Web Audio를 가로막다
+
+자, 그러면 `html5: false`로 바꾸면 끝인가?
+
+아니었다
+
+iPhone에서 테스트하려면 로컬 서버에 모바일로 접속해야 한다  
+이 프로젝트에서는 `cloudflare` 터널을 써서 로컬 개발 서버를 외부에서 접근 가능하게 했다  
+`https://xxxxx.trycloudflare.com` 같은 임시 URL이 생기고, iPhone으로 그 URL에 접속한다
+
+`html5: false`로 바꾸고, 심지어 mp3를 m4a(AAC)로 변환까지 했다  
+Apple 네이티브 포맷이니까 디코딩 실패 걱정도 없다
+
+그런데 여전히 같은 증상이었다  
+소리조절 슬라이드가 동작하지 않았다
+
+로그를 찍어보니 Howler.js가 Web Audio 모드로 시작하다가 **html5 모드로 폴백**하고 있었다  
+`decodeAudioData()`가 실패한 건 아닌데, 그 전 단계에서 XHR 요청 자체가 막혀 있었다
+
+원인은 **CORS**였다
+
+Web Audio API에서 오디오 파일을 로드하려면 XHR(XMLHttpRequest)로 ArrayBuffer를 받아와야 한다  
+이 XHR 요청은 CORS 정책의 적용을 받는다
+
+S3 버킷의 CORS 설정에는 `ghworld.co`(운영 도메인)와 `localhost:3000`만 허용되어 있었다  
+`*.trycloudflare.com`은 없었다
+
+그래서 이런 일이 일어났다
+
+```text
+cloudflare 도메인에서 S3 오디오 요청
+  → CORS 차단 (Origin 불일치)
+  → Howler XHR 실패
+  → onError에서 html5 모드로 동작하도록 분기처리
+  → html5 모드에서는 cross-origin이어도 재생은 됨 (들리긴 함)
+  → 하지만 iOS에서 html5 모드의 volume은 read-only
+  → 슬라이더 무력화
+```
+
+m4a로 바꿔도 같은 증상이었던 이유가 이거였다  
+포맷 문제가 아니라 CORS 때문에 아예 Web Audio 모드에 진입하지 못한 거다
+
+"그러면 배포해서 운영 도메인으로 테스트하면 되지 않나?"  
+맞다, 그것도 방법이다  
+운영 도메인은 이미 CORS에 등록되어 있으니까
+
+하지만 배포 없이 iOS 테스트를 할 수 있어야 개발이 빠르다  
+S3 CORS에 `*.trycloudflare.com`을 추가했다
+
+이제 cloudflare로도 Web Audio 모드가 정상 작동했다  
+iPhone에서 슬라이더가 먹기 시작했다
+
+여기서 끝인 줄 알았다
+
+:::
+
+## 함정 3 — CloudFront가 CORS 응답을 캐시한다
+
+cloudflare 환경에서 테스트를 마치고, 운영 환경(`ghworld.co`)에서도 확인하려고 접속했다
+
+또 안 됐다
+
+운영 도메인은 원래부터 S3 CORS에 등록되어 있었는데?
+
+CloudFront 응답 헤더를 까봤더니 답이 보였다  
+`Access-Control-Allow-Origin` 헤더에 운영 도메인이 아니라 **cloudflare 도메인**이 박혀 있었다
+
+**CloudFront가 CORS 응답을 캐시한 거다**
+
+흐름은 이렇다
+
+```text
+1. cloudflare 도메인에서 S3 오디오 요청
+2. S3가 "Access-Control-Allow-Origin: https://xxx.trycloudflare.com" 응답
+3. CloudFront가 이 응답을 edge에 캐시
+4. 나중에 ghworld.co에서 같은 파일 요청
+5. CloudFront가 캐시된 응답을 그대로 반환
+6. 브라우저가 Origin 불일치 확인 → CORS 차단
+```
+
+CloudFront는 기본적으로 `Origin` 요청 헤더를 캐시 키에 포함하지 않는다  
+그래서 서로 다른 Origin에서 온 요청을 같은 캐시 항목으로 취급한다  
+먼저 캐시된 쪽의 CORS 응답이 다른 Origin에도 그대로 돌아가는 거다
+
+이걸 해결하려면 CloudFront 캐시 정책에서 `Origin` 헤더를 캐시 키에 포함시켜야 한다  
+커스텀 캐시 정책을 만들어서 `Origin` 헤더를 화이트리스트에 추가하면 된다
+
+하지만 설정이 복잡해진다
+
+결국 더 단순한 방법을 선택했다
+
+S3 CORS의 `AllowedOrigins`를 `*`로 변경했다  
+어차피 이 S3 버킷의 파일은 전부 공개 읽기전용 정적 자산이다  
+환경음, 캐릭터 스프라이트, 아이템 이미지 같은 것들이다  
+누구에게나 공개할 파일인데 Origin을 제한할 이유가 없었다
+
+그리고 CloudFront 캐시를 무효화했다  
+기존에 캐시된 잘못된 CORS 응답을 날려버리기 위해서다
+
+이제야 진짜로 됐다
+
+>추후에 채팅 기능에 이미지를 도입할 예정인데 거기는 명확히 커스텀 캐시 정책을 만들어야겠다
+
+:::
+
+## 하나 고치면 다음 함정이 나온다
+
+이번 디버깅에서 가장 고통스러웠던 건 **문제가 선형적이지 않았다**는 거다
+
+처음에는 "iOS에서 volume이 안 먹네 → Web Audio로 바꾸자"로 끝날 줄 알았다
+
+그런데 Web Audio로 바꿔도 같은 증상이 나왔다  
+CORS 때문이었다
+
+CORS를 고쳤더니 이번엔 운영에서 안 됐다  
+CloudFront 캐시 때문이었다
+
+```text
+iOS volume read-only → Web Audio 전환
+  → CORS 차단으로 Web Audio 진입 실패
+    → CORS 수정 → CloudFront가 옛 CORS 응답 캐시
+      → CloudFront 캐시 무효화
+```
+
+한 겹을 벗기면 다음 겹이 나타나는 구조다  
+각각은 독립적인 문제처럼 보이지만, 실제로는 앞의 문제를 해결해야 다음 문제가 드러나는 종속 관계다
+
+그리고 가장 혼란스러운 건 **증상이 같다**는 거다  
+"슬라이더가 안 먹는다"  
+이 하나의 증상 뒤에 원인이 세 개 겹쳐 있었다
+
+## 배운 것들
+
+### 1. iOS 오디오는 데스크탑과 다른 세계다
+
+데스크탑 Chrome에서 `audio.volume = 0.3`이 되니까 당연히 모바일에서도 될 거라고 생각했다  
+Apple은 그걸 의도적으로 막고 있었다
+
+iOS에서 오디오 관련 기능을 만든다면
+
+- `HTMLMediaElement.volume`은 read-only — Web Audio API(`GainNode`)를 써야 한다
+- autoplay는 사용자 제스처(터치, 클릭) 후에만 가능 — `AudioContext.resume()` 필요
+- iOS의 모든 브라우저는 현재 WebKit 엔진을 쓴다
+
+### 2. 오디오 포맷이 중요하다
+
+mp3는 웹 오디오의 범용 포맷이지만, iOS WebKit의 `decodeAudioData()`에서 일부 인코딩이 실패할 수 있다  
+ffmpeg로 표준 프로파일로 normalize하거나, m4a(AAC) 같은 더 엄격한 컨테이너 포맷을 쓰면 안정적이다
+
+Web Audio API를 쓴다면 m4a를 우선 고려하는 게 좋다
+
+### 3. CORS와 Web Audio의 관계
+
+Web Audio에서 오디오 파일을 로드하는 과정은 단순 재생이 아니다  
+XHR로 ArrayBuffer를 받아온 뒤 `decodeAudioData()`로 디코딩한다  
+이 XHR 요청은 CORS 정책의 적용을 받는다
+
+`<audio>` element는 cross-origin이어도 재생은 된다 (들리긴 한다)  
+Web Audio는 CORS가 안 맞으면 아예 데이터를 못 가져온다  
+같은 오디오 파일인데 로드 방식에 따라 CORS 요구가 다르다
+
+### 4. CDN과 CORS는 반드시 같이 생각해야 한다
+
+CloudFront 같은 CDN은 응답을 캐시한다  
+CORS 응답 헤더(`Access-Control-Allow-Origin`)도 캐시 대상이다
+
+Origin A에서 온 요청으로 캐시된 CORS 응답이 Origin B에서 온 요청에 그대로 반환되면 브라우저가 CORS 위반으로 차단한다
+
+이걸 방지하려면
+
+- CloudFront 캐시 정책에서 `Origin` 헤더를 캐시 키에 포함시키거나
+- CORS `AllowedOrigins`를 `*`로 설정하거나 (공개 파일인 경우)
+- 캐시 무효화를 수동으로 실행하거나
+
+셋 중 하나는 해야 한다
+
+### 5. 로컬에서 되는 것과 운영에서 되는 것은 다르다
+
+로컬 → 됨  
+데스크탑 → 됨  
+Android → 됨  
+iOS → 안 됨
+
+iOS에서 고침 → cloudflare로 됨  
+운영에서 → 안 됨
+
+범위를 좁게 잡으면 배포 후에 깨진다  
+특히 오디오처럼 브라우저/OS별 정책이 다른 영역은 반드시 실기기에서 확인해야 한다
+
+:::
+
+이번 삽질에서 얻은 가장 큰 교훈은 이거다
+
+**디버깅은 선형적이지 않다**
