@@ -1,0 +1,180 @@
+<!DOCTYPE html><html lang="ko"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v6.1.5"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>2026-05-25 학습 노트 — iOS 환경음 디버깅 삽질기</title><meta name="description" content="데스크탑에서 들리던 환경음이 iPhone에서 안 되는 이유"><link rel="canonical" href="https://zlog.page/blog/study/2026-05-25/"><!-- OG --><meta property="og:type" content="website"><meta property="og:url" content="https://zlog.page/blog/study/2026-05-25/"><meta property="og:title" content="2026-05-25 학습 노트 — iOS 환경음 디버깅 삽질기"><meta property="og:description" content="데스크탑에서 들리던 환경음이 iPhone에서 안 되는 이유"><!-- Search Console --><meta name="google-site-verification" content="QL5oG6ROeQ_efrAdk4Xk9ZLbSRYdxWNyzD2FT7BFrmU"><meta name="naver-site-verification" content="d38c673504a43b7081a895abd046ec7cfaba76c4"><!-- Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-HJR3WF26N4"></script><script type="module">window.dataLayer=window.dataLayer||[];function a(){dataLayer.push(arguments)}a("js",new Date);a("config","G-HJR3WF26N4");</script><!-- Sitemap --><link rel="sitemap" href="/sitemap-index.xml"><!-- RSS --><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml"><link rel="stylesheet" href="/_astro/BaseLayout.CMtoGTxa.css">
+<style>.toc-aside[data-astro-cid-2q5oecfc]{display:none}@media(min-width:1280px){.toc-aside[data-astro-cid-2q5oecfc]{display:block;position:fixed;top:5rem;left:calc(50% + 26rem);width:14rem}}
+</style></head> <body class="flex min-h-screen flex-col bg-white text-gray-900"> <header class="border-b border-gray-100"> <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5"> <a href="/" class="text-lg font-semibold tracking-tight">zlog</a> <div class="flex gap-6 text-sm text-gray-500"> <a href="/blog/" class="transition hover:text-gray-900">Blog</a> <a href="/retro/" class="transition hover:text-gray-900">Retro</a> <a href="/lab/" class="transition hover:text-gray-900">Lab</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div class="relative" data-astro-cid-2q5oecfc> <article data-astro-cid-2q5oecfc> <header class="mb-10" data-astro-cid-2q5oecfc> <h1 class="mb-1 text-2xl font-semibold" data-astro-cid-2q5oecfc>2026-05-25 학습 노트 — iOS 환경음 디버깅 삽질기</h1> <p class="mb-3 text-sm text-gray-400" data-astro-cid-2q5oecfc>데스크탑에서 들리던 환경음이 iPhone에서 안 되는 이유</p> <div class="flex gap-3 text-xs text-gray-400" data-astro-cid-2q5oecfc> <time datetime="2026-05-25T00:00:00.000Z" data-astro-cid-2q5oecfc> 2026. 05. 25 </time> <span data-astro-cid-2q5oecfc>&middot;</span> <span data-astro-cid-2q5oecfc>14 min read</span> </div> <div class="mt-3 flex flex-wrap gap-2" data-astro-cid-2q5oecfc> <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> study </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> iOS </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> WebKit </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> Web Audio </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> CORS </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> CloudFront </span><span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-500" data-astro-cid-2q5oecfc> Howler.js </span> </div> </header> <div class="prose-custom" data-astro-cid-2q5oecfc>  <p>ghworld에 환경음을 넣었다</p>
+<p>바람 소리, 모닥불, 물소리, 새소리<br/>
+4종의 환경음이 마을 곳곳에 깔려 있고, 캐릭터가 가까이 가면 소리가 커진다<br/>
+슬라이더로 음량도 조절할 수 있다</p>
+<p>데스크탑에서는 잘 동작했다</p>
+<p>그런데 iPhone을 꺼내 들었더니 4가지 소리가 모두 동시에 들리고 소리조절도 안되더라<br/>
+슬라이더를 움직여도, 위치를 옮겨도..<br/>
+캐릭터가 모닥불 옆에 서든 마을 끝에 서든 4개 소리가 동시에 전부 들렸다</p>
+<p>여기서부터 삽질이 시작됐다</p>
+<div class="separator">···</div>
+<h2 id="함정-1--ios는-소리를-직접-조절하지-못하게-한다">함정 1 — iOS는 소리를 직접 조절하지 못하게 한다</h2>
+<p>처음엔 코드 버그를 의심했다<br/>
+<code>howl.volume(0.3)</code> 같은 호출이 실제로 잘 들어가는지 콘솔을 찍어봤다</p>
+<p>로직은 멀쩡했다<br/>
+음량 계산 로직이 정상적으로 흘러가고 있었다<br/>
+그런데 실제로 들리는 소리는 변하지 않았다</p>
+<p>한참 뒤에야 원인을 찾았다</p>
+<p><a href="https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/Using_HTML5_Audio_Video/Device-SpecificConsiderations/Device-SpecificConsiderations.html" rel="noopener noreferrer" target="_blank"><strong>iOS WebKit에서는 오디오 변경을 막는다</strong></a></p>
+<p>이게 무슨 뜻이냐면</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="js"><code><span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> audio</span><span style="color:#F97583"> =</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> Audio</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&#39;sound.mp3&#39;</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">audio.volume </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0.3</span><span style="color:#E1E4E8">;  </span><span style="color:#6A737D">// iOS에서는 무시된다. 항상 1.0</span></span></code></pre>
+<p>JavaScript로 음량을 바꾸려고 해도 iOS가 무시한다<br/>
+Apple의 의도적인 정책이다</p>
+<p>Apple의 공식 문서에 이렇게 적혀 있다</p>
+<blockquote>
+<p>“On iOS devices, the audio level is always under the user’s physical control. The volume property is not settable in JavaScript.”</p>
+</blockquote>
+<p>“음량은 하드웨어 버튼으로만 조절한다”가 Apple의 철학이다<br/>
+광고나 악의적인 사이트가 갑자기 큰 소리를 내는 걸 막기 위한 정책이라고 한다</p>
+<p>문제는 이 프로젝트에서 쓰고 있던 오디오 라이브러리인 Howler.js가 <code>html5: true</code> 모드로 돌고 있었다는 거다<br/>
+이 모드는 내부적으로 <code>&lt;audio&gt;</code> element를 쓴다<br/>
+즉, iOS에서 volume API가 막히는 그 방식이었다</p>
+<p>다행히 Howler.js에는 다른 모드가 있다</p>
+<p><code>html5: false</code>로 설정하면 Web Audio API를 쓴다<br/>
+Web Audio는 <code>&lt;audio&gt;</code> element가 아니라 <code>AudioContext</code>라는 별도의 오디오 처리 그래프를 사용한다<br/>
+여기서는 <code>GainNode</code>라는 노드로 신호를 직접 곱한다</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="js"><code><span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> ctx</span><span style="color:#F97583"> =</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> AudioContext</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> gain</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> ctx.</span><span style="color:#B392F0">createGain</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#E1E4E8">gain.gain.value </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0.3</span><span style="color:#E1E4E8">;  </span><span style="color:#6A737D">// iOS에서도 정상 동작</span></span></code></pre>
+<p>iOS의 제약은 <code>&lt;audio&gt;</code> element에만 적용된다<br/>
+시스템 음량(하드웨어 버튼)은 여전히 못 건드리지만, 앱 안에서의 음량 조절은 자유롭다</p>
+<p>그럼 처음부터 <code>html5: false</code>로 했으면 되지 않았나?<br/>
+이전에 <code>html5: true</code>로 박았던 이유가 있었다<br/>
+mp3 파일 중 일부가 Web Audio의 <code>decodeAudioData()</code>에서 디코딩 실패를 일으켰기 때문이다<br/>
+그때는 데스크탑에서만 테스트했으니 “html5 모드가 안전하다”고 판단한 거였다</p>
+<div class="separator">···</div>
+<h2 id="함정-2--cors가-web-audio를-가로막다">함정 2 — CORS가 Web Audio를 가로막다</h2>
+<p>자, 그러면 <code>html5: false</code>로 바꾸면 끝인가?</p>
+<p>아니었다</p>
+<p>iPhone에서 테스트하려면 로컬 서버에 모바일로 접속해야 한다<br/>
+이 프로젝트에서는 <code>cloudflare</code> 터널을 써서 로컬 개발 서버를 외부에서 접근 가능하게 했다<br/>
+<code>https://xxxxx.trycloudflare.com</code> 같은 임시 URL이 생기고, iPhone으로 그 URL에 접속한다</p>
+<p><code>html5: false</code>로 바꾸고, 심지어 mp3를 m4a(AAC)로 변환까지 했다<br/>
+Apple 네이티브 포맷이니까 디코딩 실패 걱정도 없다</p>
+<p>그런데 여전히 같은 증상이었다<br/>
+소리조절 슬라이드가 동작하지 않았다</p>
+<p>로그를 찍어보니 Howler.js가 Web Audio 모드로 시작하다가 <strong>html5 모드로 폴백</strong>하고 있었다<br/>
+<code>decodeAudioData()</code>가 실패한 건 아닌데, 그 전 단계에서 XHR 요청 자체가 막혀 있었다</p>
+<p>원인은 <strong>CORS</strong>였다</p>
+<p>Web Audio API에서 오디오 파일을 로드하려면 XHR(XMLHttpRequest)로 ArrayBuffer를 받아와야 한다<br/>
+이 XHR 요청은 CORS 정책의 적용을 받는다</p>
+<p>S3 버킷의 CORS 설정에는 <code>ghworld.co</code>(운영 도메인)와 <code>localhost:3000</code>만 허용되어 있었다<br/>
+<code>*.trycloudflare.com</code>은 없었다</p>
+<p>그래서 이런 일이 일어났다</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>cloudflare 도메인에서 S3 오디오 요청</span></span>
+<span class="line"><span>  → CORS 차단 (Origin 불일치)</span></span>
+<span class="line"><span>  → Howler XHR 실패</span></span>
+<span class="line"><span>  → onError에서 html5 모드로 동작하도록 분기처리</span></span>
+<span class="line"><span>  → html5 모드에서는 cross-origin이어도 재생은 됨 (들리긴 함)</span></span>
+<span class="line"><span>  → 하지만 iOS에서 html5 모드의 volume은 read-only</span></span>
+<span class="line"><span>  → 슬라이더 무력화</span></span></code></pre>
+<p>m4a로 바꿔도 같은 증상이었던 이유가 이거였다<br/>
+포맷 문제가 아니라 CORS 때문에 아예 Web Audio 모드에 진입하지 못한 거다</p>
+<p>“그러면 배포해서 운영 도메인으로 테스트하면 되지 않나?”<br/>
+맞다, 그것도 방법이다<br/>
+운영 도메인은 이미 CORS에 등록되어 있으니까</p>
+<p>하지만 배포 없이 iOS 테스트를 할 수 있어야 개발이 빠르다<br/>
+S3 CORS에 <code>*.trycloudflare.com</code>을 추가했다</p>
+<p>이제 cloudflare로도 Web Audio 모드가 정상 작동했다<br/>
+iPhone에서 슬라이더가 먹기 시작했다</p>
+<p>여기서 끝인 줄 알았다</p>
+<div class="separator">···</div>
+<h2 id="함정-3--cloudfront가-cors-응답을-캐시한다">함정 3 — CloudFront가 CORS 응답을 캐시한다</h2>
+<p>cloudflare 환경에서 테스트를 마치고, 운영 환경(<code>ghworld.co</code>)에서도 확인하려고 접속했다</p>
+<p>또 안 됐다</p>
+<p>운영 도메인은 원래부터 S3 CORS에 등록되어 있었는데?</p>
+<p>CloudFront 응답 헤더를 까봤더니 답이 보였다<br/>
+<code>Access-Control-Allow-Origin</code> 헤더에 운영 도메인이 아니라 <strong>cloudflare 도메인</strong>이 박혀 있었다</p>
+<p><strong>CloudFront가 CORS 응답을 캐시한 거다</strong></p>
+<p>흐름은 이렇다</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>1. cloudflare 도메인에서 S3 오디오 요청</span></span>
+<span class="line"><span>2. S3가 &quot;Access-Control-Allow-Origin: https://xxx.trycloudflare.com&quot; 응답</span></span>
+<span class="line"><span>3. CloudFront가 이 응답을 edge에 캐시</span></span>
+<span class="line"><span>4. 나중에 ghworld.co에서 같은 파일 요청</span></span>
+<span class="line"><span>5. CloudFront가 캐시된 응답을 그대로 반환</span></span>
+<span class="line"><span>6. 브라우저가 Origin 불일치 확인 → CORS 차단</span></span></code></pre>
+<p>CloudFront는 기본적으로 <code>Origin</code> 요청 헤더를 캐시 키에 포함하지 않는다<br/>
+그래서 서로 다른 Origin에서 온 요청을 같은 캐시 항목으로 취급한다<br/>
+먼저 캐시된 쪽의 CORS 응답이 다른 Origin에도 그대로 돌아가는 거다</p>
+<p>이걸 해결하려면 CloudFront 캐시 정책에서 <code>Origin</code> 헤더를 캐시 키에 포함시켜야 한다<br/>
+커스텀 캐시 정책을 만들어서 <code>Origin</code> 헤더를 화이트리스트에 추가하면 된다</p>
+<p>하지만 설정이 복잡해진다</p>
+<p>결국 더 단순한 방법을 선택했다</p>
+<p>S3 CORS의 <code>AllowedOrigins</code>를 <code>*</code>로 변경했다<br/>
+어차피 이 S3 버킷의 파일은 전부 공개 읽기전용 정적 자산이다<br/>
+환경음, 캐릭터 스프라이트, 아이템 이미지 같은 것들이다<br/>
+누구에게나 공개할 파일인데 Origin을 제한할 이유가 없었다</p>
+<p>그리고 CloudFront 캐시를 무효화했다<br/>
+기존에 캐시된 잘못된 CORS 응답을 날려버리기 위해서다</p>
+<p>이제야 진짜로 됐다</p>
+<blockquote>
+<p>추후에 채팅 기능에 이미지를 도입할 예정인데 거기는 명확히 커스텀 캐시 정책을 만들어야겠다</p>
+</blockquote>
+<div class="separator">···</div>
+<h2 id="하나-고치면-다음-함정이-나온다">하나 고치면 다음 함정이 나온다</h2>
+<p>이번 디버깅에서 가장 고통스러웠던 건 <strong>문제가 선형적이지 않았다</strong>는 거다</p>
+<p>처음에는 “iOS에서 volume이 안 먹네 → Web Audio로 바꾸자”로 끝날 줄 알았다</p>
+<p>그런데 Web Audio로 바꿔도 같은 증상이 나왔다<br/>
+CORS 때문이었다</p>
+<p>CORS를 고쳤더니 이번엔 운영에서 안 됐다<br/>
+CloudFront 캐시 때문이었다</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>iOS volume read-only → Web Audio 전환</span></span>
+<span class="line"><span>  → CORS 차단으로 Web Audio 진입 실패</span></span>
+<span class="line"><span>    → CORS 수정 → CloudFront가 옛 CORS 응답 캐시</span></span>
+<span class="line"><span>      → CloudFront 캐시 무효화</span></span></code></pre>
+<p>한 겹을 벗기면 다음 겹이 나타나는 구조다<br/>
+각각은 독립적인 문제처럼 보이지만, 실제로는 앞의 문제를 해결해야 다음 문제가 드러나는 종속 관계다</p>
+<p>그리고 가장 혼란스러운 건 <strong>증상이 같다</strong>는 거다<br/>
+”슬라이더가 안 먹는다”<br/>
+이 하나의 증상 뒤에 원인이 세 개 겹쳐 있었다</p>
+<h2 id="배운-것들">배운 것들</h2>
+<h3 id="1-ios-오디오는-데스크탑과-다른-세계다">1. iOS 오디오는 데스크탑과 다른 세계다</h3>
+<p>데스크탑 Chrome에서 <code>audio.volume = 0.3</code>이 되니까 당연히 모바일에서도 될 거라고 생각했다<br/>
+Apple은 그걸 의도적으로 막고 있었다</p>
+<p>iOS에서 오디오 관련 기능을 만든다면</p>
+<ul>
+<li><code>HTMLMediaElement.volume</code>은 read-only — Web Audio API(<code>GainNode</code>)를 써야 한다</li>
+<li>autoplay는 사용자 제스처(터치, 클릭) 후에만 가능 — <code>AudioContext.resume()</code> 필요</li>
+<li>iOS의 모든 브라우저는 현재 WebKit 엔진을 쓴다</li>
+</ul>
+<h3 id="2-오디오-포맷이-중요하다">2. 오디오 포맷이 중요하다</h3>
+<p>mp3는 웹 오디오의 범용 포맷이지만, iOS WebKit의 <code>decodeAudioData()</code>에서 일부 인코딩이 실패할 수 있다<br/>
+ffmpeg로 표준 프로파일로 normalize하거나, m4a(AAC) 같은 더 엄격한 컨테이너 포맷을 쓰면 안정적이다</p>
+<p>Web Audio API를 쓴다면 m4a를 우선 고려하는 게 좋다</p>
+<h3 id="3-cors와-web-audio의-관계">3. CORS와 Web Audio의 관계</h3>
+<p>Web Audio에서 오디오 파일을 로드하는 과정은 단순 재생이 아니다<br/>
+XHR로 ArrayBuffer를 받아온 뒤 <code>decodeAudioData()</code>로 디코딩한다<br/>
+이 XHR 요청은 CORS 정책의 적용을 받는다</p>
+<p><code>&lt;audio&gt;</code> element는 cross-origin이어도 재생은 된다 (들리긴 한다)<br/>
+Web Audio는 CORS가 안 맞으면 아예 데이터를 못 가져온다<br/>
+같은 오디오 파일인데 로드 방식에 따라 CORS 요구가 다르다</p>
+<h3 id="4-cdn과-cors는-반드시-같이-생각해야-한다">4. CDN과 CORS는 반드시 같이 생각해야 한다</h3>
+<p>CloudFront 같은 CDN은 응답을 캐시한다<br/>
+CORS 응답 헤더(<code>Access-Control-Allow-Origin</code>)도 캐시 대상이다</p>
+<p>Origin A에서 온 요청으로 캐시된 CORS 응답이 Origin B에서 온 요청에 그대로 반환되면 브라우저가 CORS 위반으로 차단한다</p>
+<p>이걸 방지하려면</p>
+<ul>
+<li>CloudFront 캐시 정책에서 <code>Origin</code> 헤더를 캐시 키에 포함시키거나</li>
+<li>CORS <code>AllowedOrigins</code>를 <code>*</code>로 설정하거나 (공개 파일인 경우)</li>
+<li>캐시 무효화를 수동으로 실행하거나</li>
+</ul>
+<p>셋 중 하나는 해야 한다</p>
+<h3 id="5-로컬에서-되는-것과-운영에서-되는-것은-다르다">5. 로컬에서 되는 것과 운영에서 되는 것은 다르다</h3>
+<p>로컬 → 됨<br/>
+데스크탑 → 됨<br/>
+Android → 됨<br/>
+iOS → 안 됨</p>
+<p>iOS에서 고침 → cloudflare로 됨<br/>
+운영에서 → 안 됨</p>
+<p>범위를 좁게 잡으면 배포 후에 깨진다<br/>
+특히 오디오처럼 브라우저/OS별 정책이 다른 영역은 반드시 실기기에서 확인해야 한다</p>
+<div class="separator">···</div>
+<p>이번 삽질에서 얻은 가장 큰 교훈은 이거다</p>
+<p><strong>디버깅은 선형적이지 않다</strong></p>  </div> <section class="mt-16 border-t border-gray-100 pt-10"> <script src="https://giscus.app/client.js" data-repo="zkzkzhzj/zlog" data-repo-id="R_kgDOR9wd0Q" data-category="General" data-category-id="DIC_kwDOR9wd0c4C6cB0" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="light" data-lang="ko" crossorigin="anonymous" async></script> </section> </article> <aside class="toc-aside" data-astro-cid-2q5oecfc> <nav class="sticky top-8" data-astro-cid-2q5oecfc> <p class="mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase" data-astro-cid-2q5oecfc>
+목차
+</p> <ul class="space-y-1.5 text-[13px]" data-astro-cid-2q5oecfc> <li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#함정-1--ios는-소리를-직접-조절하지-못하게-한다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 함정 1 — iOS는 소리를 직접 조절하지 못하게 한다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#함정-2--cors가-web-audio를-가로막다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 함정 2 — CORS가 Web Audio를 가로막다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#함정-3--cloudfront가-cors-응답을-캐시한다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 함정 3 — CloudFront가 CORS 응답을 캐시한다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#하나-고치면-다음-함정이-나온다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 하나 고치면 다음 함정이 나온다 </a> </li><li style="padding-left: 0px" data-astro-cid-2q5oecfc> <a href="#배운-것들" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 배운 것들 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#1-ios-오디오는-데스크탑과-다른-세계다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 1. iOS 오디오는 데스크탑과 다른 세계다 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#2-오디오-포맷이-중요하다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 2. 오디오 포맷이 중요하다 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#3-cors와-web-audio의-관계" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 3. CORS와 Web Audio의 관계 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#4-cdn과-cors는-반드시-같이-생각해야-한다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 4. CDN과 CORS는 반드시 같이 생각해야 한다 </a> </li><li style="padding-left: 12px" data-astro-cid-2q5oecfc> <a href="#5-로컬에서-되는-것과-운영에서-되는-것은-다르다" class="block text-gray-400 transition hover:text-gray-900" data-astro-cid-2q5oecfc> 5. 로컬에서 되는 것과 운영에서 되는 것은 다르다 </a> </li> </ul> </nav> </aside> </div>  </main> <footer class="mt-auto border-t border-gray-100 py-6 text-center text-xs text-gray-400">
+&copy; 2026 zlog
+</footer></body></html>
