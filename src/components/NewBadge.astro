@@ -4,10 +4,9 @@ const { pubDate } = Astro.props as { pubDate: Date };
 
 <span
   data-new-badge
-  data-pub-date={pubDate.toISOString()}
+  data-pub-date={pubDate.toISOString().slice(0, 10)}
   class="hidden h-4 min-w-4 translate-y-[-1px] place-items-center rounded-[4px] border border-gray-950/10 bg-gray-950 px-1 text-[9px] font-semibold leading-none text-white shadow-[0_1px_2px_rgba(17,24,39,0.12)]"
   aria-label="New"
 >
   N
 </span>
-
