@@ -3,19 +3,12 @@ import { getCollection, type CollectionEntry } from "astro:content";
 import NewBadge from "./NewBadge.astro";
 import { isPostCategory } from "../utils/content";
 
-type Category = Exclude<
-  CollectionEntry<"blog">["data"]["category"],
-  "retro" | "movie"
->;
+type Category = Extract<CollectionEntry<"blog">["data"]["category"], "movie">;
 
 const { active } = Astro.props as { active: Category };
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const categories: Array<{ id: Category; label: string; href: string }> = [
-  { id: "general", label: "General", href: `${base}blog/` },
-  { id: "ai", label: "AI", href: `${base}blog/ai/` },
-  { id: "study", label: "Study", href: `${base}blog/study/` },
-  { id: "english", label: "English", href: `${base}blog/english/` },
-  { id: "book", label: "Book", href: `${base}blog/book/` },
+  { id: "movie", label: "Movie", href: `${base}taste/movie/` },
 ];
 
 const allPosts = (await getCollection("blog")).filter((post) => !post.data.draft);

@@ -72,6 +72,25 @@ const tocHeadings = headings.filter((h) => h.depth <= 3);
   </div>
 </BaseLayout>
 
+<script>
+  document
+    .querySelectorAll<HTMLDetailsElement>("[data-confirm-spoiler]")
+    .forEach((details) => {
+      const summary = details.querySelector("summary");
+      if (!summary) return;
+
+      summary.addEventListener("click", (event) => {
+        if (details.open) return;
+
+        event.preventDefault();
+
+        if (window.confirm("스포 조심!!!")) {
+          details.open = true;
+        }
+      });
+    });
+</script>
+
 <style>
   .toc-aside {
     display: none;

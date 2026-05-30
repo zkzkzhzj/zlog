@@ -2,19 +2,14 @@
 import { getCollection, render } from "astro:content";
 import BlogPostLayout from "../../layouts/BlogPostLayout.astro";
 import readingTime from "reading-time";
-import { getBlogSlug } from "../../utils/content";
+import { getTasteSlug } from "../../utils/content";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   return posts
-    .filter(
-      (post) =>
-        post.data.category !== "retro" &&
-        post.data.category !== "movie" &&
-        !post.data.draft,
-    )
+    .filter((post) => post.data.category === "movie" && !post.data.draft)
     .map((post) => ({
-      params: { slug: getBlogSlug(post.id) },
+      params: { slug: getTasteSlug(post.id) },
       props: { post },
     }));
 }

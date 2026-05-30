@@ -22,6 +22,13 @@ export function getRetroSlug(id: string) {
     : contentPath;
 }
 
+export function getTasteSlug(id: string) {
+  const contentPath = getContentPath(id);
+  return contentPath.startsWith("taste/")
+    ? contentPath.slice("taste/".length)
+    : contentPath;
+}
+
 export function isPostCategory(
   post: CollectionEntry<"blog">,
   category: CollectionEntry<"blog">["data"]["category"],
@@ -30,7 +37,13 @@ export function isPostCategory(
 }
 
 export function getPostPermalink(post: CollectionEntry<"blog">) {
-  return post.data.category === "retro"
-    ? `/retro/${getRetroSlug(post.id)}/`
-    : `/blog/${getBlogSlug(post.id)}/`;
+  if (post.data.category === "retro") {
+    return `/retro/${getRetroSlug(post.id)}/`;
+  }
+
+  if (post.data.category === "movie") {
+    return `/taste/${getTasteSlug(post.id)}/`;
+  }
+
+  return `/blog/${getBlogSlug(post.id)}/`;
 }

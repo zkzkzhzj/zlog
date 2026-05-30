@@ -11,7 +11,7 @@ const blog = defineCollection({
     updatedDate: z.coerce.date().optional(),
     tags: z.array(z.string()).default([]),
     category: z
-      .enum(["general", "ai", "study", "retro", "english", "book"])
+      .enum(["general", "ai", "study", "retro", "english", "book", "movie"])
       .default("general"),
     draft: z.boolean().default(false),
   }),
