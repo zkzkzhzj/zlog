@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import NewBadge from "../../components/NewBadge.astro";
 import { getCollection } from "astro:content";
 import dayjs from "dayjs";
 import { getRetroSlug } from "../../utils/content";
@@ -23,8 +24,9 @@ const posts = (await getCollection("blog"))
               class="group flex items-baseline justify-between gap-4 rounded-md px-3 py-3 transition hover:bg-gray-50"
             >
               <div>
-                <h2 class="text-[15px] text-gray-700 group-hover:text-gray-900">
-                  {post.data.title}
+                <h2 class="flex items-center gap-1.5 text-[15px] text-gray-700 group-hover:text-gray-900">
+                  <span>{post.data.title}</span>
+                  <NewBadge pubDate={post.data.pubDate} />
                 </h2>
                 {post.data.description && (
                   <p class="mt-1 text-xs text-gray-400">
