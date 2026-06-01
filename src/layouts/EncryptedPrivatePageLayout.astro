@@ -1,0 +1,134 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  payload: {
+    salt: string;
+    iv: string;
+    ciphertext: string;
+    iterations: number;
+  };
+}
+
+const { title, description = "Private page", payload } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} noindex>
+  <article data-pagefind-ignore>
+    <header class="mb-8 border-b border-gray-100 pb-6">
+      <p class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase">
+        Private
+      </p>
+      <h1 class="text-2xl font-semibold tracking-tight text-gray-950">
+        {title}
+      </h1>
+      {description && <p class="mt-2 text-sm text-gray-500">{description}</p>}
+    </header>
+
+    <form id="private-unlock" class="space-y-4">
+      <label class="block text-sm font-medium text-gray-700" for="private-password">
+        Password
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="private-password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          class="min-w-0 flex-1 rounded border border-gray-200 px-3 py-2 text-base outline-none transition focus:border-gray-500"
+          required
+        />
+        <button
+          type="submit"
+          class="shrink-0 rounded bg-gray-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700"
+        >
+          Open
+        </button>
+      </div>
+      <p id="private-error" class="hidden text-sm text-red-500">
+        비밀번호가 맞지 않습니다.
+      </p>
+    </form>
+
+    <div id="private-content" class="prose-custom private-prose hidden"></div>
+  </article>
+</BaseLayout>
+
+<script define:vars={{ payload }}>
+  const form = document.querySelector("#private-unlock");
+  const input = document.querySelector("#private-password");
+  const error = document.querySelector("#private-error");
+  const content = document.querySelector("#private-content");
+
+  function base64ToBytes(value) {
+    const binary = atob(value);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    return bytes;
+  }
+
+  async function decrypt(password) {
+    const encodedPassword = new TextEncoder().encode(password);
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      encodedPassword,
+      "PBKDF2",
+      false,
+      ["deriveKey"],
+    );
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: base64ToBytes(payload.salt),
+        iterations: payload.iterations,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["decrypt"],
+    );
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: base64ToBytes(payload.iv) },
+      key,
+      base64ToBytes(payload.ciphertext),
+    );
+
+    return new TextDecoder().decode(decrypted);
+  }
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    error?.classList.add("hidden");
+
+    try {
+      const html = await decrypt(input.value);
+      content.innerHTML = html;
+      content.classList.remove("hidden");
+      form.classList.add("hidden");
+    } catch {
+      error?.classList.remove("hidden");
+    }
+  });
+</script>
+
+<style>
+  .private-prose {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .private-prose :global(table) {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .private-prose :global(h2) {
+    scroll-margin-top: 1rem;
+  }
+</style>
