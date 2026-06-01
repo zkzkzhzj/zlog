@@ -27,3 +27,6 @@ pnpm-debug.log*
 # local Codex settings
 .claude/settings.local.json
 .codex/settings.local.json
+
+# private local-only pages
+src/pages/private/

@@ -15,7 +15,13 @@ import {
 
 export default defineConfig({
   site: "https://zlog.page",
-  integrations: [mdx(), react(), sitemap()],
+  integrations: [
+    mdx(),
+    react(),
+    sitemap({
+      filter: (page) => !new URL(page).pathname.startsWith("/private/"),
+    }),
+  ],
   devToolbar: { enabled: false },
   vite: {
     plugins: [tailwindcss()],
