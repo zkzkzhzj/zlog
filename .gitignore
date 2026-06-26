@@ -30,3 +30,6 @@ pnpm-debug.log*
 
 # private local-only pages
 src/pages/private/
+
+# local-only planning notes
+.local/
