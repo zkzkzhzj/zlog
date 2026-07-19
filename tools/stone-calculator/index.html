@@ -8,7 +8,7 @@ N
 </span> </a> <a href="/lab/" class="transition hover:text-gray-900">Lab</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div id="stonecalc"> <h1 class="text-2xl font-semibold">융화 재료 제작 효율 계산기</h1> <p class="mt-2 mb-8 text-sm text-gray-500">
 스크린샷을 넣으면 식물채집/벌목/채광/수렵/낚시/고고학 재료를 자동 인식해서
       가루 교환 가이드를 알려줍니다.
-</p> <div class="card"> <h2>1. 스크린샷 (소지품 · 재료 저장소 화면)</h2> <div class="row" style="margin:0 0 10px"> <button id="captureBtn" class="ghost">🖥 화면 캡처</button> <button id="pasteBtn" class="ghost">📋 클립보드 붙여넣기</button> </div> <div id="drop">클릭 · 드래그 · 붙여넣기(Ctrl+V)로 이미지 업로드</div> <input type="file" id="file" accept="image/*" hidden> <canvas id="preview"></canvas> <div class="row"><button id="ocrBtn" style="display:none">자동 인식하기</button></div> <div class="progress" id="prog"><span></span></div> <div id="ocrStatus"></div> <div id="chips"></div> </div> <div class="card"> <h2>2. 보유 재료 — 인식 결과 확인/수정</h2> <table class="mat"> <thead> <tr> <th></th> <th><span class="dot" style="background:#9ca3af"></span>일반</th> <th><span class="dot" style="background:#ca8a04"></span>가루</th> <th><span class="dot" style="background:#22c55e"></span>고급</th> <th><span class="dot" style="background:#3b82f6"></span>희귀</th> <th><span class="dot" style="background:#f97316"></span>아비도스</th> </tr> </thead> <tbody id="matBody"></tbody> </table> <div class="row"> <button id="calc">계산하기</button> <button id="reset" class="ghost">초기화</button> <label class="toggle"><input type="checkbox" id="allowBuy"> 아비도스 구매 허용</label> </div> </div> <div class="card" id="result"> <h2>3. 교환 가이드</h2> <div class="big" id="summary"></div> <div id="blocks"></div> </div> <details> <summary>교환 규칙 · 슬롯 매핑 수정 (게임 패치 시)</summary> <div class="card"> <div class="rules"> <div>일반 <input id="rWB" type="number" value="100"> → 가루 <input id="rWP" type="number" value="80"></div> <div>고급 <input id="rGB" type="number" value="50"> → 가루 <input id="rGP" type="number" value="80"></div> <div>가루 <input id="rPB" type="number" value="100"> → 아비도스 <input id="rPO" type="number" value="10"></div> <div>희귀 <input id="rBB" type="number" value="5"> → 일반 <input id="rBW" type="number" value="50"></div> <div style="grid-column:1/-1">제작: 일반<input id="rCW" type="number" value="86"> 고급<input id="rCG" type="number" value="45"> 아비도스<input id="rCO" type="number" value="33"> → 융화 재료 <input id="rCS" type="number" value="10"></div> </div> <div class="rules" style="margin-top:12px"> <div style="grid-column:1/-1">슬롯 매핑 — 각 카테고리 줄에서 왼쪽부터 몇 번째 칸이 일반,가루,고급,희귀,아비도스인지 (0 = 해당 재료 없음). 매핑에 없는 칸은 계산에 포함되지 않습니다</div> <div>식물채집 <input id="map_0" class="map" value="1,2,3,4,5"></div> <div>벌목 <input id="map_1" class="map" value="1,2,3,4,5"></div> <div>채광 <input id="map_2" class="map" value="1,2,3,4,5"></div> <div>수렵 <input id="map_3" class="map" value="1,2,3,5,6"></div> <div>낚시 <input id="map_4" class="map" value="1,2,3,4,5"></div> <div>고고학 <input id="map_5" class="map" value="1,2,3,4,5"></div> </div> </div> </details> <div id="cropModal"> <div class="cropTip">재료 개수가 보이는 영역을 드래그로 선택하세요 (좁게 자를수록 인식률↑)</div> <canvas id="cropCanvas"></canvas> <div class="cropBtns"> <button id="cropOk">선택 영역 사용</button> <button id="cropAll" class="ghost">전체 사용</button> <button id="cropCancel" class="ghost">취소</button> </div> </div> </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script> <script>
+</p> <div class="card"> <h2>1. 스크린샷 (소지품 · 재료 저장소 화면)</h2> <div class="row" style="margin:0 0 10px"> <button id="captureBtn" class="ghost">🖥 화면 캡처</button> <button id="pasteBtn" class="ghost">📋 클립보드 붙여넣기</button> </div> <div id="drop">클릭 · 드래그 · 붙여넣기(Ctrl+V)로 이미지 업로드</div> <input type="file" id="file" accept="image/*" hidden> <canvas id="preview"></canvas> <div class="row"><button id="ocrBtn" style="display:none">자동 인식하기</button></div> <div class="progress" id="prog"><span></span></div> <div id="ocrStatus"></div> <div id="chips"></div> </div> <div class="card"> <h2>2. 보유 재료 — 인식 결과 확인/수정</h2> <table class="mat"> <thead> <tr> <th></th> <th><span class="dot" style="background:#9ca3af"></span>일반</th> <th><span class="dot" style="background:#ca8a04"></span>가루</th> <th><span class="dot" style="background:#22c55e"></span>고급</th> <th><span class="dot" style="background:#3b82f6"></span>희귀</th> <th><span class="dot" style="background:#f97316"></span>아비도스</th> </tr> </thead> <tbody id="matBody"></tbody> </table> <div class="row"> <button id="calc">계산하기</button> <button id="reset" class="ghost">초기화</button> <label class="toggle"><input type="checkbox" id="allowBuy"> 아비도스 구매 허용</label> </div> </div> <div class="card" id="result"> <h2>3. 교환 가이드</h2> <div class="big" id="summary"></div> <div id="blocks"></div> </div> <details> <summary>교환 규칙 · 슬롯 매핑 수정 (게임 패치 시)</summary> <div class="card"> <div class="rules"> <div>일반 <input id="rWB" type="number" value="100"> → 가루 <input id="rWP" type="number" value="80"></div> <div>고급 <input id="rGB" type="number" value="50"> → 가루 <input id="rGP" type="number" value="80"></div> <div>가루 <input id="rPB" type="number" value="100"> → 아비도스 <input id="rPO" type="number" value="10"></div> <div>희귀 <input id="rBB" type="number" value="5"> → 일반 <input id="rBW" type="number" value="50"> (벌목·채광만)</div> <div style="grid-column:1/-1">제작: 일반<input id="rCW" type="number" value="86"> 고급<input id="rCG" type="number" value="45"> 아비도스<input id="rCO" type="number" value="33"> → 융화 재료 <input id="rCS" type="number" value="10"></div> </div> <div class="rules" style="margin-top:12px"> <div style="grid-column:1/-1">슬롯 매핑 — 각 카테고리 줄에서 왼쪽부터 몇 번째 칸이 일반,가루,고급,희귀,아비도스인지 (0 = 해당 재료 없음). 매핑에 없는 칸은 계산에 포함되지 않습니다</div> <div>식물채집 <input id="map_0" class="map" value="1,2,3,4,5"></div> <div>벌목 <input id="map_1" class="map" value="1,2,3,4,5"></div> <div>채광 <input id="map_2" class="map" value="1,2,3,4,5"></div> <div>수렵 <input id="map_3" class="map" value="1,2,3,5,6"></div> <div>낚시 <input id="map_4" class="map" value="1,2,3,4,5"></div> <div>고고학 <input id="map_5" class="map" value="1,2,3,4,5"></div> </div> </div> </details> <div id="cropModal"> <div class="cropTip">재료 개수가 보이는 영역을 드래그로 선택하세요 (좁게 자를수록 인식률↑)</div> <canvas id="cropCanvas"></canvas> <div class="cropBtns"> <button id="cropOk">선택 영역 사용</button> <button id="cropAll" class="ghost">전체 사용</button> <button id="cropCancel" class="ghost">취소</button> </div> </div> </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script> <script>
 const $=id=>document.getElementById(id);
 const CATS=['식물채집','벌목','채광','수렵','낚시','고고학'];
 const FIELDS=['W','P','G','B','O'];
@@ -551,7 +551,8 @@ $('calc').onclick=()=>{
     const h={W:val('in_'+ci+'_W'),P:val('in_'+ci+'_P'),G:val('in_'+ci+'_G'),B:val('in_'+ci+'_B'),O:val('in_'+ci+'_O')};
     if(h.W+h.P+h.G+h.B+h.O===0) return;
     any=true;
-    const r=solve(h,R,allowBuy);
+    // 희귀 → 일반 교환은 벌목·채광에만 존재
+    const r=solve(h,R,allowBuy,c==='벌목'||c==='채광');
     totalStones+=r.n>0?r.stones:0; totalBuy+=r.buy||0;
     blocks.appendChild(renderCat(c,r,R,allowBuy));
   });
@@ -562,8 +563,8 @@ $('calc').onclick=()=>{
   $('result').scrollIntoView({behavior:'smooth'});
 };
 
-function solve(h,R,allowBuy){
-  const bBat=Math.floor(h.B/R.bB);
+function solve(h,R,allowBuy,canBW){
+  const bBat=canBW?Math.floor(h.B/R.bB):0;
   const W=h.W+bBat*R.bW;
   const nCap=Math.min(Math.floor(h.G/R.cG), Math.floor(W/R.cW));
   function orangeMax(n){
@@ -573,7 +574,7 @@ function solve(h,R,allowBuy){
   let n, buy=0;
   if(allowBuy){ n=nCap; buy=Math.max(0,R.cO*n-orangeMax(n)); }
   else{ n=0; for(let m=nCap;m>=0;m--){ if(orangeMax(m)>=R.cO*m){ n=m; break; } } }
-  if(n<=0) return {n:0,shortage:diagnose(h,W,R,nCap)};
+  if(n<=0) return {n:0,shortage:diagnose(h,W,R,nCap,canBW)};
 
   const needO=Math.max(0,R.cO*n-h.O);
   const maxWb=Math.floor((W-R.cW*n)/R.wB), maxGb=Math.floor((h.G-R.cG*n)/R.gB);
@@ -596,10 +597,10 @@ function solve(h,R,allowBuy){
            P:powder-pBat*R.pB, B:h.B-bBat*R.bB, O:orange+buy-R.cO*n },
     nextShort: !allowBuy&&n<nCap ? R.cO*(n+1)-orangeMax(n+1) : 0 };
 }
-function diagnose(h,W,R,nCap){
+function diagnose(h,W,R,nCap,canBW){
   if(nCap<=0){
     if(Math.floor(h.G/R.cG)<=0) return '고급 재료가 '+R.cG+'개 미만이라 제작 불가';
-    return '일반 재료(+희귀 환산)가 '+R.cW+'개 미만이라 제작 불가';
+    return '일반 재료'+(canBW?'(+희귀 환산)':'')+'가 '+R.cW+'개 미만이라 제작 불가';
   }
   return '재료를 전부 갈아도 아비도스 재료가 부족해서 제작 불가';
 }
