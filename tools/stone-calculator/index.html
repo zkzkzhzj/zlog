@@ -1,0 +1,631 @@
+<!DOCTYPE html><html lang="ko"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v6.1.5"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>융화 재료 제작 효율 계산기 · zlog</title><meta name="description" content="로스트아크 생활 재료를 융화 재료로 바꿀 때 최대 효율 교환 순서를 계산해주는 도구"><link rel="canonical" href="https://zlog.page/tools/stone-calculator/"><!-- OG --><meta property="og:type" content="website"><meta property="og:url" content="https://zlog.page/tools/stone-calculator/"><meta property="og:title" content="융화 재료 제작 효율 계산기 · zlog"><meta property="og:description" content="로스트아크 생활 재료를 융화 재료로 바꿀 때 최대 효율 교환 순서를 계산해주는 도구"><!-- Search Console --><meta name="google-site-verification" content="QL5oG6ROeQ_efrAdk4Xk9ZLbSRYdxWNyzD2FT7BFrmU"><meta name="naver-site-verification" content="d38c673504a43b7081a895abd046ec7cfaba76c4"><!-- Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=G-HJR3WF26N4"></script><script type="module">window.dataLayer=window.dataLayer||[];function a(){dataLayer.push(arguments)}a("js",new Date);a("config","G-HJR3WF26N4");</script><!-- Sitemap --><link rel="sitemap" href="/sitemap-index.xml"><!-- RSS --><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml"><link rel="stylesheet" href="/_astro/index@_@astro.hgZbF_IZ.css">
+<link rel="stylesheet" href="/_astro/BaseLayout.DI_6yGkT.css"></head> <body class="flex min-h-screen flex-col bg-white text-gray-900"> <header class="border-b border-gray-100"> <nav class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5"> <a href="/" class="text-lg font-semibold tracking-tight">zlog</a> <div class="flex gap-6 text-sm text-gray-500"> <a href="/blog/" class="flex items-center gap-1.5 transition hover:text-gray-900"> <span>Blog</span> <span data-new-badge data-pub-date="2026-07-15" class="hidden h-4 min-w-4 translate-y-[-1px] place-items-center rounded-[4px] border border-gray-950/10 bg-gray-950 px-1 text-[9px] font-semibold leading-none text-white shadow-[0_1px_2px_rgba(17,24,39,0.12)]" aria-label="New">
+N
+</span> </a> <a href="/retro/" class="flex items-center gap-1.5 transition hover:text-gray-900"> <span>Retro</span> <span data-new-badge data-pub-date="2026-06-26" class="hidden h-4 min-w-4 translate-y-[-1px] place-items-center rounded-[4px] border border-gray-950/10 bg-gray-950 px-1 text-[9px] font-semibold leading-none text-white shadow-[0_1px_2px_rgba(17,24,39,0.12)]" aria-label="New">
+N
+</span> </a> <a href="/taste/" class="flex items-center gap-1.5 transition hover:text-gray-900"> <span>Taste</span> <span data-new-badge data-pub-date="2026-06-04" class="hidden h-4 min-w-4 translate-y-[-1px] place-items-center rounded-[4px] border border-gray-950/10 bg-gray-950 px-1 text-[9px] font-semibold leading-none text-white shadow-[0_1px_2px_rgba(17,24,39,0.12)]" aria-label="New">
+N
+</span> </a> <a href="/lab/" class="transition hover:text-gray-900">Lab</a> </div> </nav> </header> <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">  <div id="stonecalc"> <h1 class="text-2xl font-semibold">융화 재료 제작 효율 계산기</h1> <p class="mt-2 mb-8 text-sm text-gray-500">
+스크린샷을 넣으면 식물채집/벌목/채광/수렵/낚시/고고학 재료를 자동 인식해서
+      가루 교환 가이드를 알려줍니다.
+</p> <div class="card"> <h2>1. 스크린샷 (소지품 · 재료 저장소 화면)</h2> <div class="row" style="margin:0 0 10px"> <button id="captureBtn" class="ghost">🖥 화면 캡처</button> <button id="pasteBtn" class="ghost">📋 클립보드 붙여넣기</button> </div> <div id="drop">클릭 · 드래그 · 붙여넣기(Ctrl+V)로 이미지 업로드</div> <input type="file" id="file" accept="image/*" hidden> <canvas id="preview"></canvas> <div class="row"><button id="ocrBtn" style="display:none">자동 인식하기</button></div> <div class="progress" id="prog"><span></span></div> <div id="ocrStatus"></div> <div id="chips"></div> </div> <div class="card"> <h2>2. 보유 재료 — 인식 결과 확인/수정</h2> <table class="mat"> <thead> <tr> <th></th> <th><span class="dot" style="background:#9ca3af"></span>일반</th> <th><span class="dot" style="background:#ca8a04"></span>가루</th> <th><span class="dot" style="background:#22c55e"></span>고급</th> <th><span class="dot" style="background:#3b82f6"></span>희귀</th> <th><span class="dot" style="background:#f97316"></span>아비도스</th> </tr> </thead> <tbody id="matBody"></tbody> </table> <div class="row"> <button id="calc">계산하기</button> <button id="reset" class="ghost">초기화</button> <label class="toggle"><input type="checkbox" id="allowBuy"> 아비도스 구매 허용</label> </div> </div> <div class="card" id="result"> <h2>3. 교환 가이드</h2> <div class="big" id="summary"></div> <div id="blocks"></div> </div> <details> <summary>교환 규칙 · 슬롯 매핑 수정 (게임 패치 시)</summary> <div class="card"> <div class="rules"> <div>일반 <input id="rWB" type="number" value="100"> → 가루 <input id="rWP" type="number" value="80"></div> <div>고급 <input id="rGB" type="number" value="50"> → 가루 <input id="rGP" type="number" value="80"></div> <div>가루 <input id="rPB" type="number" value="100"> → 아비도스 <input id="rPO" type="number" value="10"></div> <div>희귀 <input id="rBB" type="number" value="5"> → 일반 <input id="rBW" type="number" value="50"></div> <div style="grid-column:1/-1">제작: 일반<input id="rCW" type="number" value="86"> 고급<input id="rCG" type="number" value="45"> 아비도스<input id="rCO" type="number" value="33"> → 융화 재료 <input id="rCS" type="number" value="10"></div> </div> <div class="rules" style="margin-top:12px"> <div style="grid-column:1/-1">슬롯 매핑 — 각 카테고리 줄에서 왼쪽부터 몇 번째 칸이 일반,가루,고급,희귀,아비도스인지 (0 = 해당 재료 없음). 매핑에 없는 칸은 계산에 포함되지 않습니다</div> <div>식물채집 <input id="map_0" class="map" value="1,2,3,4,5"></div> <div>벌목 <input id="map_1" class="map" value="1,2,3,4,5"></div> <div>채광 <input id="map_2" class="map" value="1,2,3,4,5"></div> <div>수렵 <input id="map_3" class="map" value="1,2,3,5,6"></div> <div>낚시 <input id="map_4" class="map" value="1,2,3,4,5"></div> <div>고고학 <input id="map_5" class="map" value="1,2,3,4,5"></div> </div> </div> </details> <div id="cropModal"> <div class="cropTip">재료 개수가 보이는 영역을 드래그로 선택하세요 (좁게 자를수록 인식률↑)</div> <canvas id="cropCanvas"></canvas> <div class="cropBtns"> <button id="cropOk">선택 영역 사용</button> <button id="cropAll" class="ghost">전체 사용</button> <button id="cropCancel" class="ghost">취소</button> </div> </div> </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script> <script>
+const $=id=>document.getElementById(id);
+const CATS=['식물채집','벌목','채광','수렵','낚시','고고학'];
+const FIELDS=['W','P','G','B','O'];
+const CAT_COLOR={'식물채집':'#4ade80','벌목':'#fb923c','채광':'#60a5fa','수렵':'#f87171','낚시':'#38bdf8','고고학':'#c084fc'};
+// 화면(스크롤 목록)에 나타나는 순서 — 라벨이 가려진 줄의 소속 추정에 사용
+const SCREEN_ORDER=['식물채집','벌목','채광','수렵','낚시','고고학'];
+
+// ---------- 입력 테이블 생성 ----------
+const tb=$('matBody');
+CATS.forEach((c,ci)=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td class="cat">'+c+'</td>'+FIELDS.map(f=>
+    '<td><input type="number" id="in_'+ci+'_'+f+'" min="0" placeholder="0"></td>').join('');
+  tb.appendChild(tr);
+});
+let lastFocused=null;
+document.querySelectorAll('table.mat input').forEach(el=>el.addEventListener('focus',()=>lastFocused=el));
+
+// ---------- 이미지 로드 ----------
+const drop=$('drop'), fileIn=$('file'), ocrBtn=$('ocrBtn'), prog=$('prog'),
+      preview=$('preview'), pctx=preview.getContext('2d'),
+      status=$('ocrStatus'), chips=$('chips');
+let srcImage=null; // HTMLImageElement 또는 canvas
+
+drop.onclick=()=>fileIn.click();
+fileIn.onchange=e=>{ if(e.target.files[0]) loadImg(e.target.files[0]); };
+drop.ondragover=e=>{e.preventDefault(); drop.classList.add('over');};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault(); drop.classList.remove('over'); if(e.dataTransfer.files[0]) loadImg(e.dataTransfer.files[0]);};
+document.addEventListener('paste',e=>{
+  for(const it of e.clipboardData.items) if(it.type.startsWith('image')) loadImg(it.getAsFile());
+});
+function loadImg(f){
+  const r=new FileReader();
+  r.onload=()=>{ const im=new Image(); im.onload=()=>setImage(im); im.src=r.result; };
+  r.readAsDataURL(f);
+}
+function setImage(imgOrCanvas){
+  srcImage=imgOrCanvas;
+  const w=imgOrCanvas.naturalWidth||imgOrCanvas.width, h=imgOrCanvas.naturalHeight||imgOrCanvas.height;
+  preview.width=w; preview.height=h;
+  pctx.drawImage(imgOrCanvas,0,0);
+  preview.style.display='block';
+  drop.textContent='이미지 준비 완료 — 아래 [자동 인식하기]를 눌러주세요';
+  ocrBtn.style.display='inline-block';
+  status.textContent=''; chips.innerHTML='';
+}
+
+// ---------- 화면 캡처 ----------
+$('captureBtn').onclick=async()=>{
+  if(!window.isSecureContext){ alert('화면 캡처는 https(또는 localhost)에서만 동작해요.'); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
+    alert('이 브라우저(또는 미리보기 창)는 화면 캡처를 지원하지 않아요.\nChrome/Edge에서 열어주세요.'); return; }
+  try{
+    const stream=await navigator.mediaDevices.getDisplayMedia({video:true});
+    const video=document.createElement('video');
+    video.srcObject=stream; await video.play();
+    await new Promise(r=>setTimeout(r,350));
+    const c=document.createElement('canvas');
+    c.width=video.videoWidth; c.height=video.videoHeight;
+    c.getContext('2d').drawImage(video,0,0);
+    stream.getTracks().forEach(t=>t.stop());
+    openCrop(c);
+  }catch(e){
+    if(e.name==='NotAllowedError')
+      alert('화면 캡처가 차단됐거나 취소됐어요.\nChrome/Edge에서 열었는지, 사이트 권한에서 화면 공유가 허용인지 확인해주세요.');
+    else alert('캡처 실패: '+e.name+' — '+e.message);
+  }
+};
+$('pasteBtn').onclick=async()=>{
+  try{
+    const items=await navigator.clipboard.read();
+    for(const it of items) for(const t of it.types) if(t.startsWith('image')){ loadImg(await it.getType(t)); return; }
+    alert('클립보드에 이미지가 없어요. 캡처 후 다시 눌러주세요.');
+  }catch(e){ alert('클립보드 접근이 거부됐어요. Ctrl+V 또는 파일 업로드를 이용해주세요.'); }
+};
+
+// ---------- 크롭 ----------
+const cropModal=$('cropModal'), cropCanvas=$('cropCanvas'), cctx=cropCanvas.getContext('2d');
+let cropSrc=null, sel=null, dragging=false;
+function openCrop(canvas){
+  cropSrc=canvas; sel=null;
+  cropCanvas.width=canvas.width; cropCanvas.height=canvas.height;
+  drawCrop(); cropModal.classList.add('show');
+}
+function drawCrop(){
+  cctx.drawImage(cropSrc,0,0);
+  if(sel){
+    const {x,y,w,h}=normSel();
+    cctx.fillStyle='rgba(0,0,0,.55)'; cctx.fillRect(0,0,cropCanvas.width,cropCanvas.height);
+    cctx.drawImage(cropSrc,x,y,w,h,x,y,w,h);
+    cctx.strokeStyle='#f5a524'; cctx.lineWidth=Math.max(2,cropCanvas.width/500);
+    cctx.strokeRect(x,y,w,h);
+  }
+}
+function normSel(){ return {x:Math.min(sel.x1,sel.x2),y:Math.min(sel.y1,sel.y2),w:Math.abs(sel.x2-sel.x1),h:Math.abs(sel.y2-sel.y1)}; }
+function toXY(e){ const r=cropCanvas.getBoundingClientRect(); const p=e.touches?e.touches[0]:e;
+  return {x:(p.clientX-r.left)*cropCanvas.width/r.width, y:(p.clientY-r.top)*cropCanvas.height/r.height}; }
+function cs(e){ e.preventDefault(); const p=toXY(e); dragging=true; sel={x1:p.x,y1:p.y,x2:p.x,y2:p.y}; drawCrop(); }
+function cm(e){ if(!dragging)return; e.preventDefault(); const p=toXY(e); sel.x2=p.x; sel.y2=p.y; drawCrop(); }
+cropCanvas.addEventListener('mousedown',cs); cropCanvas.addEventListener('mousemove',cm);
+window.addEventListener('mouseup',()=>dragging=false);
+cropCanvas.addEventListener('touchstart',cs,{passive:false});
+cropCanvas.addEventListener('touchmove',cm,{passive:false});
+cropCanvas.addEventListener('touchend',()=>dragging=false);
+$('cropOk').onclick=()=>{
+  let out=cropSrc;
+  if(sel){ const {x,y,w,h}=normSel();
+    if(w>5&&h>5){ out=document.createElement('canvas'); out.width=w; out.height=h;
+      out.getContext('2d').drawImage(cropSrc,x,y,w,h,0,0,w,h); } }
+  finishCrop(out);
+};
+$('cropAll').onclick=()=>finishCrop(cropSrc);
+$('cropCancel').onclick=()=>{ cropModal.classList.remove('show'); cropSrc=null; };
+function finishCrop(c){ cropModal.classList.remove('show'); setImage(c); cropSrc=null; }
+
+// ---------- OCR ----------
+ocrBtn.onclick=async()=>{
+  if(!srcImage) return;
+  ocrBtn.disabled=true; ocrBtn.textContent='인식 중...'; prog.style.display='block';
+  status.textContent=''; chips.innerHTML='';
+  pctx.drawImage(srcImage,0,0);   // 이전 오버레이 제거 (픽셀 추정 오염 방지)
+  try{
+    const w=srcImage.naturalWidth||srcImage.width;
+    const scale=Math.max(1.5, Math.min(3, 4200/w));   // 숫자가 클수록 인식률↑
+    let passIdx=0;
+    const worker=await Tesseract.createWorker('kor+eng',1,{
+      logger:m=>{ if(m.status==='recognizing text') prog.firstElementChild.style.width=((passIdx+m.progress)/2*100)+'%'; }
+    });
+    // 패스1: 흰 글자 이진화(숫자 특화) + 흩어진 텍스트 모드
+    await worker.setParameters({tessedit_pageseg_mode:'11'});
+    const binWords=collectWords(await worker.recognize(prepCanvas(scale,true)),scale);
+    passIdx=1;
+    // 패스2: 회색조 반전(한글 라벨 보충) + 자동 레이아웃 모드
+    await worker.setParameters({tessedit_pageseg_mode:'3'});
+    const grayWords=collectWords(await worker.recognize(prepCanvas(scale,false)),scale);
+    // 병합: 패스1 우선, 패스2는 겹치지 않는 단어만 추가
+    const words=[...binWords];
+    for(const g of grayWords){
+      const gx=(g.x0+g.x1)/2, gy=(g.y0+g.y1)/2;
+      if(!words.some(b=>gx>b.x0-2&&gx<b.x1+2&&gy>b.y0-2&&gy<b.y1+2)) words.push(g);
+    }
+    const parsed=autoParse(words);
+    if(parsed) await rescueMissing(worker,parsed);
+    await worker.terminate();
+    if(parsed){
+      applyParse(parsed); drawOverlay(parsed);
+      const k=parsed.placed.filter(p=>p.rescued&&p.mapped).length;
+      if(k) status.textContent+='\n🔍 '+k+'칸은 슬롯을 확대해 다시 읽어 채우거나 교정했어요 — 값이 맞는지 확인해주세요.';
+    }
+    else fallbackChips(words);
+  }catch(err){ status.textContent='OCR 실패: '+err.message; }
+  ocrBtn.disabled=false; ocrBtn.textContent='자동 인식하기';
+  prog.style.display='none'; prog.firstElementChild.style.width='0';
+};
+
+function med(a){ if(!a.length) return null; const s=[...a].sort((x,y)=>x-y); return s[Math.floor(s.length/2)]; }
+
+function prepCanvas(scale,binary){
+  const w=srcImage.naturalWidth||srcImage.width, h=srcImage.naturalHeight||srcImage.height;
+  const c=document.createElement('canvas');
+  c.width=Math.round(w*scale); c.height=Math.round(h*scale);
+  const ctx=c.getContext('2d');
+  ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+  ctx.drawImage(srcImage,0,0,c.width,c.height);
+  const d=ctx.getImageData(0,0,c.width,c.height), px=d.data, W=c.width, H=c.height;
+  if(binary){
+    // 글자 = 밝고 채도 낮은 픽셀 중, 근처(4px)에 어두운 윤곽이 있는 것만
+    // → 게임 숫자는 검은 테두리가 있어 살아남고, 흰색 아이콘 몸통은 제거됨
+    const bright=new Uint8Array(W*H); let dark=new Uint8Array(W*H);
+    for(let i=0,p=0;i<px.length;i+=4,p++){
+      const r=px[i],g=px[i+1],b=px[i+2];
+      const lum=0.3*r+0.59*g+0.11*b, ch=Math.max(r,g,b)-Math.min(r,g,b);
+      if(lum>150&&ch<95) bright[p]=1;
+      if(lum<90) dark[p]=1;
+    }
+    for(let it=0;it<4;it++){
+      const nx=new Uint8Array(W*H);
+      for(let y=0;y<H;y++){ const o=y*W;
+        for(let x=0;x<W;x++){ const p=o+x;
+          if(dark[p]||(x>0&&dark[p-1])||(x<W-1&&dark[p+1])||(y>0&&dark[p-W])||(y<H-1&&dark[p+W])) nx[p]=1;
+        }
+      }
+      dark=nx;
+    }
+    const mask=new Uint8Array(W*H);
+    for(let p=0;p<mask.length;p++) if(bright[p]&&dark[p]) mask[p]=1;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){   // 획 1px 두껍게
+      const p=y*W+x;
+      if(!mask[p] && ((x>0&&mask[p-1]===1)||(x<W-1&&mask[p+1]===1)||(y>0&&mask[p-W]===1)||(y<H-1&&mask[p+W]===1))) mask[p]=2;
+    }
+    for(let p=0,i=0;p<mask.length;p++,i+=4){
+      const v=mask[p]?0:255; px[i]=px[i+1]=px[i+2]=v; px[i+3]=255;
+    }
+  }else{
+    for(let i=0;i<px.length;i+=4){
+      let v=0.3*px[i]+0.59*px[i+1]+0.11*px[i+2];
+      v=255-v; v=(v-128)*1.3+128; v=v<0?0:v>255?255:v;
+      px[i]=px[i+1]=px[i+2]=v;
+    }
+  }
+  ctx.putImageData(d,0,0);
+  return c;
+}
+function collectWords(res,scale){
+  const out=[];
+  for(const wd of res.data.words||[]){
+    if(!wd.text||!wd.text.trim()||!wd.bbox) continue;
+    out.push({text:wd.text.trim(), conf:wd.confidence, x0:wd.bbox.x0/scale, y0:wd.bbox.y0/scale, x1:wd.bbox.x1/scale, y1:wd.bbox.y1/scale});
+  }
+  return out;
+}
+
+// ---------- 자동 매핑 파서 ----------
+function autoParse(words){
+  const HEADS=['식물채집','벌목','채광','수렵','낚시','고고학'];
+  const ALIAS={ '식물채집':['식물','식믈','싱물','채집','재집'], '벌목':['벌목','발목','벌묵','빌목'],
+    '채광':['채광','재광','채꽝','체광'], '수렵':['수렵','수렴','수련','스렵','수엽'],
+    '낚시':['낚시','낙시','낚씨','낚사'], '고고학':['고고학','고고흐','교고학','고고혁'] };
+  const hs=[];
+  for(const w of words){
+    const t=w.text.replace(/\s/g,'');
+    for(const c of HEADS) if(ALIAS[c].some(a=>t.includes(a))){ hs.push({cat:c,x0:w.x0,x1:w.x1,yc:(w.y0+w.y1)/2}); break; }
+  }
+  hs.sort((a,b)=>a.yc-b.yc);
+  const headers=[];
+  for(const h of hs) if(!headers.some(o=>o.cat===h.cat&&Math.abs(o.yc-h.yc)<25)) headers.push(h);
+  if(!headers.some(h=>CATS.includes(h.cat))) return null;
+
+  let nums=[];
+  for(const w of words){
+    const m=w.text.match(/\d[\d,\.]*/); if(!m) continue;
+    if(w.text.replace(/[\d,\.\s]/g,'').length>1) continue;      // 숫자 위주 토큰만
+    if(w.conf!==undefined&&w.conf<35) continue;                 // 저신뢰(아이콘 오인식) 제거
+    const v=parseInt(m[0].replace(/[,\.]/g,''),10);
+    if(!(v>0)) continue;
+    nums.push({v,conf:w.conf,x0:w.x0,x1:w.x1,y0:w.y0,y1:w.y1,xc:(w.x0+w.x1)/2,yc:(w.y0+w.y1)/2});
+  }
+  if(!nums.length) return null;
+  // 글자 크기에서 크게 벗어난 토큰(아이콘·장식 오인식) 제거
+  const hMed0=med(nums.map(n=>n.y1-n.y0))||14;
+  // 숫자가 아이콘 윤곽과 붙어 세로로 길게 잡힌 토큰은 버리지 않고 보정 — 숫자는 bbox 상단에 위치
+  for(const n of nums){ const hh=n.y1-n.y0;
+    if(hh>=hMed0*2.2&&hh<hMed0*3.5){ n.y1=n.y0+hMed0; n.yc=(n.y0+n.y1)/2; n.clamped=true; } }
+  nums=nums.filter(n=>{const hh=n.y1-n.y0; return hh>hMed0*0.45&&hh<hMed0*2.2;});
+  if(!nums.length) return null;
+  // OCR이 쪼갠 숫자 재결합: 같은 줄에서 거의 붙은 숫자 토큰은 하나로 합침 (예: "17"+"47" → 1747)
+  nums.sort((a,b)=>(a.yc-b.yc)||(a.x0-b.x0));
+  const mergedN=[];
+  for(const n of nums){
+    const p=mergedN[mergedN.length-1];
+    if(p && Math.abs(p.yc-n.yc)<hMed0*0.8 && n.x0-p.x1<hMed0*0.9 && n.x0>p.x0){
+      p.v=parseInt(String(p.v)+String(n.v),10);
+      p.x1=n.x1; p.xc=(p.x0+p.x1)/2;
+      p.y0=Math.min(p.y0,n.y0); p.y1=Math.max(p.y1,n.y1); p.yc=(p.y0+p.y1)/2;
+    } else mergedN.push({...n});
+  }
+  nums=mergedN.filter(n=>n.v>0&&n.v<100000);                    // 골드/실링 등 큰 수 제외
+  if(!nums.length) return null;
+
+  const anchorX=Math.min(...headers.filter(h=>CATS.includes(h.cat)).map(h=>h.x0));
+  const px1=Math.max(...nums.map(n=>n.x1),...headers.map(h=>h.x1))+30;
+  const pool=nums.filter(n=>n.xc>anchorX-30&&n.xc<px1);
+  if(!pool.length) return null;
+  const hMed=med(pool.map(n=>n.y1-n.y0))||14;
+
+  // 행 클러스터링 → 행 간격(pitchY)
+  const ys=pool.map(n=>n.yc).sort((a,b)=>a-b);
+  const rowsY=[];
+  for(const y of ys){
+    if(!rowsY.length||y-rowsY[rowsY.length-1].y>hMed*1.1) rowsY.push({y,c:1});
+    else { const r=rowsY[rowsY.length-1]; r.y=(r.y*r.c+y)/(r.c+1); r.c++; }
+  }
+  const centers=[...rowsY.map(r=>r.y),...headers.map(h=>h.yc)].sort((a,b)=>a-b);
+  const dfs=[]; for(let i=1;i<centers.length;i++){ const d=centers[i]-centers[i-1]; if(d>hMed*1.3) dfs.push(d); }
+  let pitchY=med(dfs);
+  if(pitchY) pitchY=med(dfs.filter(x=>x<pitchY*1.4))||pitchY; else pitchY=hMed*3.5;
+
+  // 열 간격(pitchX): 같은 행 내 인접 숫자 간격의 최빈값
+  const dxs=[];
+  for(const rw of rowsY){
+    const arr=pool.filter(n=>Math.abs(n.yc-rw.y)<hMed*1.1).sort((a,b)=>a.xc-b.xc);
+    for(let i=1;i<arr.length;i++){ const d=arr[i].xc-arr[i-1].xc; if(d>hMed) dxs.push(d); }
+  }
+  // 슬롯은 정사각형에 가까움 → 열 간격은 행 간격의 0.55~1.7배 범위 안에서만 신뢰
+  let pitchX=med(dxs.filter(x=>x>pitchY*0.55&&x<pitchY*1.7));
+  if(!pitchX||pitchX<pitchY*0.55||pitchX>pitchY*1.7) pitchX=pitchY*1.05;
+
+  // 숫자 → 카테고리 배정
+  const placed=[];
+  for(const n of pool){
+    if(headers.some(h=>Math.abs(h.yc-n.yc)<pitchY*0.35)) continue;  // 헤더 줄의 10/10 등 제외
+    let owner=null,next=null;
+    for(const h of headers){ if(h.yc<n.yc-pitchY*0.3) owner=h; else if(!next) next=h; }
+    let cat=null;
+    if(owner){
+      if(n.yc-owner.yc<=pitchY*2.7 && CATS.includes(owner.cat) && (!next||n.yc<next.yc-pitchY*0.3)) cat=owner.cat;
+      else if(!next && n.yc-owner.yc>pitchY*2.7 && n.yc-owner.yc<=pitchY*6){
+        // 아래쪽 헤더 라벨을 못 읽어 붕 뜬 줄 → 화면 순서상 owner 다음 카테고리로 유추.
+        // 미인식 헤더 줄의 "10 / 11" 같은 우측 개수 표기가 첫 행으로 오인되면 슬롯이
+        // 전부 밀리므로, 매핑에 실제 쓰이는 왼쪽 칸 범위의 숫자만 받는다.
+        const li=SCREEN_ORDER.indexOf(owner.cat);
+        const guess=SCREEN_ORDER[li+1];
+        if(guess&&CATS.includes(guess)&&!headers.some(h=>h.cat===guess)
+          &&n.xc<anchorX+pitchX*6.5) cat=guess;
+      }
+    }else{
+      const first=headers[0];
+      // 첫 라벨 위의 줄들(최대 2줄) → 고정 순서상 바로 이전 카테고리로 유추
+      if(first.yc-n.yc<pitchY*2.7){
+        const li=SCREEN_ORDER.indexOf(first.cat);
+        if(li>0&&CATS.includes(SCREEN_ORDER[li-1])) cat=SCREEN_ORDER[li-1];
+      }
+    }
+    if(!cat) continue;
+    const col=Math.round((n.xc-anchorX)/pitchX)+1;
+    if(col<1||col>10) continue;
+    placed.push({cat,col,v:n.v,conf:n.conf,clamped:n.clamped,yc:n.yc,box:n});
+  }
+  // 카테고리 내 행 번호 → 슬롯 번호 (2번째 줄은 11~20)
+  const catRows={};
+  for(const c of CATS){
+    const arr=placed.filter(p=>p.cat===c).sort((a,b)=>a.yc-b.yc);
+    let r=0,lastY=null; const rows=[];
+    for(const p of arr){
+      if(lastY===null||p.yc-lastY>hMed*1.2){ if(lastY!==null) r++; rows.push(p.yc); }
+      lastY=p.yc; p.slot=r*10+p.col;
+    }
+    catRows[c]=rows;
+  }
+  return {headers:headers.filter(h=>CATS.includes(h.cat)), placed, catRows, anchorX, pitchX, pitchY, hMed};
+}
+
+// ---------- 누락 슬롯 확대 재인식 ----------
+// 전체 이미지 OCR에서 숫자를 못 찾은 매핑 칸만 잘라내 숫자 전용 모드로 다시 읽는다.
+// 좁은 크롭(숫자 주변) 우선, 실패 시 넓은 크롭 — 각각 이진화 → 원본 순으로 시도.
+async function rescueMissing(worker,res){
+  const maps=getMaps();
+  const mappedSlots={};
+  CATS.forEach((c,ci)=>{ mappedSlots[c]=maps[ci].filter(s=>s>0); });
+  const numBox=(col,rowY)=>{
+    const xc=res.anchorX+(col-1)*res.pitchX;
+    return [xc-res.pitchX*0.3, rowY-res.hMed*1.4, xc+res.pitchX*0.35, rowY+res.hMed*0.9];
+  };
+  // 1) 숫자를 못 찾은 매핑 칸
+  const jobs=[];
+  CATS.forEach((c,ci)=>{
+    const items=res.placed.filter(p=>p.cat===c);
+    if(!items.length) return;
+    FIELDS.forEach((f,k)=>{
+      const s=maps[ci][k]; if(!s||items.some(p=>p.slot===s)) return;
+      const ri=Math.floor((s-1)/10), col=((s-1)%10)+1;
+      const rowY=(res.catRows[c]||[])[ri]; if(rowY===undefined) return;
+      jobs.push({cat:c,slot:s,col,rowY});
+    });
+  });
+  // 2) 값 재검증 대상: 신뢰도가 낮거나 bbox를 보정한 매핑 칸 (아이콘 조각이 앞자리에 붙는 오인식 교정)
+  const sus=res.placed.filter(p=>mappedSlots[p.cat]&&mappedSlots[p.cat].includes(p.slot)
+    &&(p.clamped||(p.conf!==undefined&&p.conf<70)));
+  if(!jobs.length&&!sus.length) return;
+  await worker.setParameters({tessedit_pageseg_mode:'7', tessedit_char_whitelist:'0123456789'});
+  for(const j of jobs.slice(0,12)){
+    // 숫자 픽셀(흰 글자+검은 테두리)이 실제로 있는 칸만 재인식 — 빈/미보유 칸에서
+    // 아이콘 윤곽을 숫자로 오인하는 것을 방지 (아이콘 밝기는 보유 여부와 무관해 쓰지 않음)
+    const nb=numBox(j.col,j.rowY);
+    if(digitPixelMass(nb)<15) continue;
+    const boxes=[nb,
+      [nb[0]-res.pitchX*0.2, nb[1]-res.hMed*0.2, nb[2]+res.pitchX*0.2, nb[3]+res.hMed*0.7],
+    ];
+    let v=0, used=null;
+    for(const bx of boxes){
+      for(const bin of [true,false]){
+        const n=parseInt(await ocrSlot(worker,bx,bin),10);
+        if(n>0&&n<100000){ v=n; used=bx; break; }
+      }
+      if(v) break;
+    }
+    if(v) res.placed.push({cat:j.cat,col:j.col,slot:j.slot,v,yc:j.rowY,rescued:true,
+      box:{x0:used[0],y0:used[1],x1:used[2],y1:used[3]}});
+  }
+  for(const p of sus.slice(0,12)){
+    const ri=Math.floor((p.slot-1)/10), col=((p.slot-1)%10)+1;
+    const rowY=(res.catRows[p.cat]||[])[ri]; if(rowY===undefined) continue;
+    const bx=numBox(col,rowY);
+    for(const bin of [true,false]){
+      const n=parseInt(await ocrSlot(worker,bx,bin),10);
+      if(!(n>0&&n<100000)) continue;
+      if(n!==p.v){
+        const a=String(p.v), b=String(n);
+        // 좁은 크롭 결과가 기존 값의 끝자리와 일치할 때만 교정 (예: 768 → 68)
+        if(a.endsWith(b)||b.endsWith(a)){ p.v=n; p.rescued=true; }
+      }
+      break;
+    }
+  }
+}
+// 숫자 픽셀 질량: 밝고 저채도이며 주변에 어두운 윤곽이 있는 픽셀 수 (게임 개수 표기 특징)
+function digitPixelMass(bx){
+  const x0=Math.max(0,Math.round(bx[0])), y0=Math.max(0,Math.round(bx[1])),
+        x1=Math.min(preview.width,Math.round(bx[2])), y1=Math.min(preview.height,Math.round(bx[3]));
+  const W=x1-x0, H=y1-y0;
+  if(W<3||H<3) return 0;
+  const d=pctx.getImageData(x0,y0,W,H).data;
+  const lum=new Float32Array(W*H), ch=new Float32Array(W*H);
+  for(let i=0,p=0;i<d.length;i+=4,p++){
+    lum[p]=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2];
+    ch[p]=Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2]);
+  }
+  let cnt=0;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const p=y*W+x;
+    if(!(lum[p]>150&&ch[p]<95)) continue;
+    let dark=false;
+    for(let dy=-5;dy<=5&&!dark;dy++)for(let dx=-5;dx<=5;dx++){
+      const yy=y+dy, xx=x+dx;
+      if(yy<0||yy>=H||xx<0||xx>=W) continue;
+      if(lum[yy*W+xx]<90){ dark=true; break; }
+    }
+    if(dark) cnt++;
+  }
+  return cnt;
+}
+async function ocrSlot(worker,bx,bin){
+  const x0=Math.max(0,Math.round(bx[0])), y0=Math.max(0,Math.round(bx[1])),
+        x1=Math.min(preview.width,Math.round(bx[2])), y1=Math.min(preview.height,Math.round(bx[3]));
+  if(x1-x0<6||y1-y0<6) return '';
+  const sc=5, c=document.createElement('canvas');
+  c.width=(x1-x0)*sc; c.height=(y1-y0)*sc;
+  const ctx=c.getContext('2d');
+  ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+  ctx.drawImage(srcImage,x0,y0,x1-x0,y1-y0,0,0,c.width,c.height);
+  if(bin){
+    const d=ctx.getImageData(0,0,c.width,c.height), px=d.data;
+    for(let i=0;i<px.length;i+=4){
+      const r=px[i],g=px[i+1],b=px[i+2];
+      const lum=0.3*r+0.59*g+0.11*b, ch=Math.max(r,g,b)-Math.min(r,g,b);
+      const v=(lum>120&&ch<130)?0:255;
+      px[i]=px[i+1]=px[i+2]=v; px[i+3]=255;
+    }
+    ctx.putImageData(d,0,0);
+  }
+  try{ const r=await worker.recognize(c); return (r.data.text||'').replace(/\D/g,''); }
+  catch(e){ return ''; }
+}
+
+function getMaps(){
+  return CATS.map((c,ci)=>{
+    const arr=($('map_'+ci).value||'').split(',').map(s=>parseInt(s.trim(),10)||0);
+    while(arr.length<5) arr.push(0);
+    return arr.slice(0,5);
+  });
+}
+
+function applyParse(res){
+  const maps=getMaps();
+  const lines=[]; let inferred=0;
+  document.querySelectorAll('table.mat input').forEach(el=>el.classList.remove('autofilled','inferred'));
+  CATS.forEach((c,ci)=>{
+    const items=res.placed.filter(p=>p.cat===c);
+    if(!items.length){ lines.push(c+': 화면에 없음 (접혀있거나 범위 밖)'); return; }
+    let cnt=0;
+    FIELDS.forEach((f,k)=>{
+      const s=maps[ci][k]; if(!s) return;
+      const el=$('in_'+ci+'_'+f);
+      el.classList.add('autofilled');
+      const hit=items.find(p=>p.slot===s);
+      if(hit){ el.value=hit.v; cnt++; hit.mapped=f; return; }
+      // 숫자를 못 찾은 칸: 원본 이미지의 슬롯 픽셀로 추정 (회색/빈칸=0, 컬러 아이콘인데 숫자 없음=1)
+      const g=guessSlot(res,c,s);
+      el.value=g;
+      if(g===1){ el.classList.add('inferred'); inferred++; }
+    });
+    lines.push(c+': '+cnt+'칸 인식');
+  });
+  status.textContent='인식된 구역: '+res.headers.map(h=>h.cat).join(', ')+'\n'+lines.join('\n')
+    +(inferred?'\n⚠ 주황 테두리 칸: 숫자가 안 보여서 아이콘 색으로 1개 추정 — 틀리면 직접 수정':'')
+    +'\n이미지 위 표시를 보고 잘못 들어간 값은 표에서 직접 수정하세요.';
+}
+function guessSlot(res,cat,slot){
+  const rows=res.catRows[cat]||[];
+  const ri=Math.floor((slot-1)/10), col=((slot-1)%10)+1;
+  const rowY=rows[ri]; if(rowY===undefined) return 0;
+  // 같은 줄에서 인식된 숫자가 3개 미만이면(하단 바 오인식 등) 추정하지 않음
+  if(res.placed.filter(p=>p.cat===cat&&Math.floor((p.slot-1)/10)===ri).length<3) return 0;
+  const xc=res.anchorX+(col-1)*res.pitchX;
+  const x0=Math.max(0,Math.round(xc-res.pitchX*0.35)), x1=Math.min(preview.width,Math.round(xc+res.pitchX*0.05));
+  const y0=Math.max(0,Math.round(rowY+res.pitchY*0.12)), y1=Math.min(preview.height,Math.round(rowY+res.pitchY*0.55));
+  if(x1-x0<3||y1-y0<3) return 0;
+  const d=pctx.getImageData(x0,y0,x1-x0,y1-y0).data;
+  let sum=0,n=0;
+  for(let i=0;i<d.length;i+=4){ sum+=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2]; n++; }
+  return (sum/n)>95?1:0;   // 밝으면 아이템 있음(1개), 어두우면 회색/빈칸(0개)
+}
+
+function drawOverlay(res){
+  pctx.drawImage(srcImage,0,0);
+  pctx.font='bold '+Math.max(12,preview.width/80)+'px sans-serif';
+  for(const h of res.headers){
+    pctx.strokeStyle='#f5a524'; pctx.lineWidth=Math.max(2,preview.width/700);
+    pctx.strokeRect(h.x0-4,h.yc-12,(h.x1-h.x0)+8,24);
+  }
+  for(const p of res.placed){
+    const b=p.box, col=CAT_COLOR[p.cat];
+    pctx.strokeStyle=col; pctx.lineWidth=Math.max(p.mapped?3:1.5,preview.width/(p.mapped?500:900));
+    pctx.strokeRect(b.x0-3,b.y0-3,(b.x1-b.x0)+6,(b.y1-b.y0)+6);
+    if(p.mapped){ pctx.fillStyle=col; pctx.fillText(p.slot,b.x0-3,b.y0-6); }
+  }
+}
+
+function fallbackChips(words){
+  const vals=[];
+  for(const w of words){
+    const m=w.text.match(/\d[\d,\.]*/); if(!m) continue;
+    const v=parseInt(m[0].replace(/[,\.]/g,''),10);
+    if(v>0&&v<100000) vals.push(v);
+  }
+  if(!vals.length){ status.textContent='숫자를 찾지 못했어요. 더 크게 캡처하거나 직접 입력해주세요.'; return; }
+  status.textContent='카테고리 라벨(식물채집/벌목/...)을 찾지 못해 자동 배치는 못 했어요.\n입력칸을 클릭한 뒤 아래 숫자를 눌러 채워주세요.';
+  vals.forEach(v=>{
+    const c=document.createElement('span'); c.className='chip'; c.textContent=v.toLocaleString();
+    c.onclick=()=>{ if(lastFocused){ lastFocused.value=v; } };
+    chips.appendChild(c);
+  });
+}
+
+// ---------- 계산 ----------
+const val=id=>Math.max(0,parseInt($(id).value,10)||0);
+$('reset').onclick=()=>{
+  document.querySelectorAll('table.mat input').forEach(el=>{el.value=''; el.classList.remove('autofilled');});
+  $('result').style.display='none'; status.textContent=''; chips.innerHTML='';
+};
+$('calc').onclick=()=>{
+  const R={ wB:val('rWB'),wP:val('rWP'), gB:val('rGB'),gP:val('rGP'),
+            pB:val('rPB'),pO:val('rPO'), bB:val('rBB'),bW:val('rBW'),
+            cW:val('rCW'),cG:val('rCG'),cO:val('rCO'),cS:val('rCS') };
+  const allowBuy=$('allowBuy').checked;
+  const blocks=$('blocks'); blocks.innerHTML='';
+  let totalStones=0, totalBuy=0, any=false;
+  CATS.forEach((c,ci)=>{
+    const h={W:val('in_'+ci+'_W'),P:val('in_'+ci+'_P'),G:val('in_'+ci+'_G'),B:val('in_'+ci+'_B'),O:val('in_'+ci+'_O')};
+    if(h.W+h.P+h.G+h.B+h.O===0) return;
+    any=true;
+    const r=solve(h,R,allowBuy);
+    totalStones+=r.n>0?r.stones:0; totalBuy+=r.buy||0;
+    blocks.appendChild(renderCat(c,r,R,allowBuy));
+  });
+  if(!any){ alert('재료를 입력해주세요.'); return; }
+  $('summary').innerHTML='합계: 융화 재료 <b>'+totalStones.toLocaleString()+'개</b>'
+    +(totalBuy>0?' <span class="buy">(아비도스 총 '+totalBuy.toLocaleString()+'개 구매)</span>':'');
+  $('result').style.display='block';
+  $('result').scrollIntoView({behavior:'smooth'});
+};
+
+function solve(h,R,allowBuy){
+  const bBat=Math.floor(h.B/R.bB);
+  const W=h.W+bBat*R.bW;
+  const nCap=Math.min(Math.floor(h.G/R.cG), Math.floor(W/R.cW));
+  function orangeMax(n){
+    const wb=Math.floor((W-R.cW*n)/R.wB), gb=Math.floor((h.G-R.cG*n)/R.gB);
+    return h.O+Math.floor((h.P+wb*R.wP+gb*R.gP)/R.pB)*R.pO;
+  }
+  let n, buy=0;
+  if(allowBuy){ n=nCap; buy=Math.max(0,R.cO*n-orangeMax(n)); }
+  else{ n=0; for(let m=nCap;m>=0;m--){ if(orangeMax(m)>=R.cO*m){ n=m; break; } } }
+  if(n<=0) return {n:0,shortage:diagnose(h,W,R,nCap)};
+
+  const needO=Math.max(0,R.cO*n-h.O);
+  const maxWb=Math.floor((W-R.cW*n)/R.wB), maxGb=Math.floor((h.G-R.cG*n)/R.gB);
+  let wb=0,gb=0,pBat=0;
+  if(needO>0){
+    pBat=Math.ceil(needO/R.pO);
+    const pNeed=Math.max(0,pBat*R.pB-h.P);
+    wb=Math.min(maxWb,Math.ceil(pNeed/R.wP));
+    const left=pNeed-wb*R.wP;
+    if(left>0) gb=Math.min(maxGb,Math.ceil(left/R.gP));
+  }
+  const powder=h.P+wb*R.wP+gb*R.gP;
+  pBat=Math.min(Math.floor(powder/R.pB), pBat);
+  const orange=h.O+pBat*R.pO;
+  if(allowBuy) buy=Math.max(0,R.cO*n-orange);
+
+  return {n,bBat,wb,gb,pBat,buy, stones:n*R.cS,
+    used:{W:R.cW*n,G:R.cG*n,O:R.cO*n},
+    left:{ W:W-R.cW*n-wb*R.wB, G:h.G-R.cG*n-gb*R.gB,
+           P:powder-pBat*R.pB, B:h.B-bBat*R.bB, O:orange+buy-R.cO*n },
+    nextShort: !allowBuy&&n<nCap ? R.cO*(n+1)-orangeMax(n+1) : 0 };
+}
+function diagnose(h,W,R,nCap){
+  if(nCap<=0){
+    if(Math.floor(h.G/R.cG)<=0) return '고급 재료가 '+R.cG+'개 미만이라 제작 불가';
+    return '일반 재료(+희귀 환산)가 '+R.cW+'개 미만이라 제작 불가';
+  }
+  return '재료를 전부 갈아도 아비도스 재료가 부족해서 제작 불가';
+}
+function renderCat(cat,r,R,allowBuy){
+  const div=document.createElement('div'); div.className='catBlock';
+  if(r.n<=0){
+    div.innerHTML='<h3>'+cat+' — 제작 불가</h3><div class="warn">'+r.shortage+'</div>';
+    return div;
+  }
+  const li=[];
+  if(r.bBat>0) li.push('희귀 <b>'+(r.bBat*R.bB).toLocaleString()+'개</b> → 일반 '+(r.bBat*R.bW).toLocaleString()+'개');
+  if(r.wb>0)   li.push('일반 <b>'+(r.wb*R.wB).toLocaleString()+'개</b> → 가루 '+(r.wb*R.wP).toLocaleString()+'개');
+  if(r.gb>0)   li.push('고급 <b>'+(r.gb*R.gB).toLocaleString()+'개</b> → 가루 '+(r.gb*R.gP).toLocaleString()+'개');
+  if(r.pBat>0) li.push('가루 <b>'+(r.pBat*R.pB).toLocaleString()+'개</b> → 아비도스 '+(r.pBat*R.pO).toLocaleString()+'개');
+  if(r.buy>0)  li.push('아비도스 <b class="buy">'+r.buy.toLocaleString()+'개 구매</b>');
+  li.push('제작 <b>'+r.n+'회</b> — 일반 '+r.used.W.toLocaleString()+' / 고급 '+r.used.G.toLocaleString()+' / 아비도스 '+r.used.O.toLocaleString()+' 소모');
+  const l=r.left, parts=[];
+  if(l.W>0)parts.push('일반 '+l.W.toLocaleString()); if(l.G>0)parts.push('고급 '+l.G.toLocaleString());
+  if(l.P>0)parts.push('가루 '+l.P.toLocaleString()); if(l.B>0)parts.push('희귀 '+l.B.toLocaleString());
+  if(l.O>0)parts.push('아비도스 '+l.O.toLocaleString());
+  div.innerHTML='<h3>'+cat+' — '+r.n+'회 제작 <span class="stones">융화 재료 '+r.stones.toLocaleString()+'개</span></h3>'
+    +'<ol class="steps">'+li.map(s=>'<li>'+s+'</li>').join('')+'</ol>'
+    +'<div class="leftover">'+(parts.length?'남는 재료: '+parts.join(', '):'남는 재료 없음')+'</div>'
+    +(!allowBuy&&r.nextShort>0?'<div class="warn">'+(r.n+1)+'회 제작에는 아비도스 '+r.nextShort+'개 부족 (구매 허용 시 계산됨)</div>':'');
+  return div;
+}
+  </script>  </main> <footer class="mt-auto border-t border-gray-100 py-6 text-center text-xs text-gray-400">
+&copy; 2026 zlog
+</footer> <script type="module">const i=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"});function s(){const t=i.formatToParts(new Date),e=t.find(n=>n.type==="year")?.value,a=t.find(n=>n.type==="month")?.value,o=t.find(n=>n.type==="day")?.value;return`${e}-${a}-${o}`}function r(t){const[e,a,o]=t.split("-").map(Number);return Date.UTC(e,a-1,o)/864e5}const d=r(s());document.querySelectorAll("[data-new-badge]").forEach(t=>{const e=t.getAttribute("data-pub-date");if(!e)return;const a=d-r(e);a>=0&&a<=1&&(t.classList.remove("hidden"),t.classList.add("inline-grid"))});</script></body></html>
